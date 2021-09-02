@@ -1,0 +1,4 @@
+*~
+.mypy_cache/
+tests/__pycache__/
+OptClim2/__pycache__/
