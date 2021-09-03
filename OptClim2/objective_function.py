@@ -16,11 +16,11 @@ class Parameter:
                  resolution: float = 1e-6) -> None:
         """constructor"""
 
-        if minv >= maxv:
+        self._minv = float(minv)
+        self._maxv = float(maxv)
+        self._resolution = float(resolution)
+        if self.minv >= self.maxv:
             raise ValueError('minv must be smaller than maxv')
-        self._minv = minv
-        self._maxv = maxv
-        self._resolution = resolution
 
     @property
     def minv(self) -> float:
