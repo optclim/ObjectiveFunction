@@ -220,6 +220,13 @@ class ObjectiveFunction:
         return iparam
 
     def __call__(self, params):
+        """look up parameters
+
+        :param parms: dictionary containing parameter values
+        :result: raises OptClimNewRun if lookup fails
+                 returns the value if lookup succeeds and state is completed
+                 return a random value otherwise
+        """
         iparam = self._getiparam(params)
         cur = self.con.cursor()
         cur.execute(
