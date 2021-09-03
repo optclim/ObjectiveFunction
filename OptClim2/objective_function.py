@@ -22,6 +22,10 @@ class Parameter:
         if self.minv >= self.maxv:
             raise ValueError('minv must be smaller than maxv')
 
+    def __repr__(self):
+        return f'Parameter({self.minv}, {self.maxv}, ' \
+            f'resolution={self.resolution})'
+
     @property
     def minv(self) -> float:
         """the minimum value the parameter can take"""
