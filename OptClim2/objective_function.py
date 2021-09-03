@@ -1,4 +1,9 @@
-__all__ = ['Parameter']
+__all__ = ['Parameter', 'ObjectiveFunction']
+
+import logging
+from typing import Mapping
+import sqlite3
+from pathlib import Path
 
 
 class Parameter:
@@ -98,3 +103,84 @@ class Parameter:
         :type iscale: int
         """
         return self.value(self.int2scale(iscale))
+
+
+class ObjectiveFunction:
+    """class maintaining a lookup table for an objective function
+
+    :param basedir: the directory in which the lookup table is kept
+    :type basedir: Path
+    :param parameters: a dictionary mapping parameter names to the range of
+        permissible parameter values
+    """
+
+    def __init__(self, basedir: Path, parameters: Mapping[str, Parameter]):
+        """constructor"""
+
+        if len(parameters) == 0:
+            raise RuntimeError('no parameters given')
+
+        self._log = logging.getLogger('OptClim2.ObjectiveFunction')
+
+        dbName = basedir/'objective_function.sqlite'
+
+        if not dbName.exists():
+            self._log.info('create db')
+            self._con = sqlite3.connect(dbName)
+
+            cur = self.con.cursor()
+            cur.execute(
+                """create table if not exists parameters
+                (name text, minv real, maxv real, resolution real);
+                """)
+            cols = []
+            for p in parameters:
+                cols.append(f'{p} integer')
+                cur.execute("insert into parameters values (?,?,?,?);",
+                            (p, parameters[p].minv, parameters[p].maxv,
+                             parameters[p].resolution))
+            cols.append("state text")
+            cur.execute(
+                "create table if not exists lookup ({0});".format(
+                    ",".join(cols)))
+            self.con.commit()
+        else:
+            self._log.info('checking db')
+            self._con = sqlite3.connect(dbName)
+            paramlist = list(parameters.keys())
+
+            cur = self.con.cursor()
+            cur.execute('select * from parameters;')
+            error = False
+            for p, minv, maxv, res in cur.fetchall():
+                if p not in paramlist:
+                    self._log.error(
+                        f'parameter {p} not found in configuration')
+                    error = True
+                    continue
+                if abs(res-parameters[p].resolution) > min(
+                        res, parameters[p].resolution):
+                    self._log.error(f'resolution of {p} does not match')
+                    error = True
+                if abs(minv-parameters[p].minv) > parameters[p].resolution:
+                    self._log.error(f'min value of {p} does not match')
+                    error = True
+                if abs(maxv-parameters[p].maxv) > parameters[p].resolution:
+                    self._log.error(f'max value of {p} does not match')
+                    error = True
+                paramlist.remove(p)
+            for p in paramlist:
+                self._log.error(f'parameter {p} not found in database')
+                error = True
+            if error:
+                raise RuntimeError('configuration does not match database')
+
+    @property
+    def con(self):
+        return self._con
+
+
+if __name__ == '__main__':
+    logging.basicConfig(level=logging.DEBUG)
+    params = {'a': Parameter(1, 2), 'b': Parameter(-1, 1)}
+    objFun = ObjectiveFunction(Path('/tmp'), params)
