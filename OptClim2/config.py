@@ -32,7 +32,7 @@ class OptclimConfig:
     :type fname: Path
     """
     def __init__(self, fname: Path) -> None:
-        self._log = logging.getLogger('optclim.config')
+        self._log = logging.getLogger('OptClim2.config')
         self._cfg = ConfigObj(configspec=optclimDefaults)
         self._cfg.validate(validator)
 
@@ -103,6 +103,15 @@ class OptclimConfig:
         if self._optimise_params is None:
             self._get_params()
         return self._optimise_params
+
+    @property
+    def basedir(self):
+        """the base directory"""
+        p = Path(self.cfg['setup']['basedir'])
+        if not p.exists():
+            self._log.info(f'creating base directory {p}')
+            p.mkdir(parents=True)
+        return p
 
 
 if __name__ == '__main__':
