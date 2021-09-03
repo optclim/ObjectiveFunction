@@ -1,6 +1,7 @@
 import pytest
 
 from OptClim2.objective_function import Parameter, ObjectiveFunction
+from OptClim2.objective_function import OptClimNewRun
 
 
 @pytest.fixture
@@ -58,3 +59,39 @@ def test_objective_function_read_fail_db(rundir, paramsA):
     # wrong number of parameters in db
     with pytest.raises(RuntimeError):
         ObjectiveFunction(rundir, paramsA)
+
+
+@pytest.fixture
+def objectiveA(rundir, paramsA):
+    return ObjectiveFunction(rundir, paramsA)
+
+
+def test_select_str(objectiveA):
+    assert objectiveA._select_str == 'a=:a and b=:b and c=:c'
+
+
+def test_insert_str(objectiveA):
+    assert objectiveA._insert_str == '(:a,:b,:c,"n",null)'
+
+
+@pytest.fixture
+def valuesA():
+    return {'a': 0., 'b': 1., 'c': -2}
+
+
+@pytest.fixture
+def resultA():
+    return 1000.
+
+
+def test_first_call(objectiveA, valuesA):
+    # should fail since the values are not in the lookup table
+    with pytest.raises(OptClimNewRun):
+        objectiveA(valuesA)
+
+
+def test_second_call(objectiveA, valuesA, resultA):
+    # should succeed but return a random value
+    r = objectiveA(valuesA)
+    assert isinstance(r, float)
+    assert r != resultA
