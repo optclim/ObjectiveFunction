@@ -1,6 +1,5 @@
 import pytest
-
-from OptClim2.objective_function import Parameter
+from OptClim2 import Parameter
 
 
 def test_parameter_bad_range():
