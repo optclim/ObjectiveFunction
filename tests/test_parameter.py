@@ -48,8 +48,7 @@ testdata = [
     (-1., 0., 0),
     (2.5, 1., 100000),
     (0.75, 0.5, 50000),
-    (1., 2./3.5, 57143),
-    ]
+    (1., 2. / 3.5, 57143)]
 
 
 @pytest.mark.parametrize("value,scale,iscale", testdata)
@@ -57,6 +56,6 @@ def test_timedistance_v0(param, value, scale, iscale):
     assert param.scale(value) == scale
     assert param.value(scale) == value
     assert param.scale2int(scale) == iscale
-    assert abs(param.int2scale(iscale)-scale) < param.resolution
+    assert abs(param.int2scale(iscale) - scale) < param.resolution
     assert param.value2int(value) == iscale
-    assert abs(param.int2value(iscale)-value) < param.resolution
+    assert abs(param.int2value(iscale) - value) < param.resolution

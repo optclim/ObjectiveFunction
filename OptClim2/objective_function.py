@@ -22,7 +22,8 @@ class ObjectiveFunction:
         permissible parameter values
     """
 
-    def __init__(self, basedir: Path, parameters: Mapping[str, Parameter]):
+    def __init__(self, basedir: Path,                   # noqa: C901
+                 parameters: Mapping[str, Parameter]):
         """constructor"""
 
         if len(parameters) == 0:
@@ -31,7 +32,7 @@ class ObjectiveFunction:
         self._parameters = parameters
         self._log = logging.getLogger('OptClim2.ObjectiveFunction')
 
-        dbName = basedir/'objective_function.sqlite'
+        dbName = basedir / 'objective_function.sqlite'
 
         # generate database query strings
         paramlist = list(parameters.keys())
@@ -48,7 +49,7 @@ class ObjectiveFunction:
         insrt.append('"n"')
         insrt.append('null')
         self._select_str = ' and '.join(slct)
-        self._insert_str = '('+','.join(insrt)+')'
+        self._insert_str = '(' + ','.join(insrt) + ')'
 
         if not dbName.exists():
             self._log.info('create db')
@@ -85,14 +86,14 @@ class ObjectiveFunction:
                         f'parameter {p} not found in configuration')
                     error = True
                     continue
-                if abs(res-parameters[p].resolution) > min(
+                if abs(res - parameters[p].resolution) > min(
                         res, parameters[p].resolution):
                     self._log.error(f'resolution of {p} does not match')
                     error = True
-                if abs(minv-parameters[p].minv) > parameters[p].resolution:
+                if abs(minv - parameters[p].minv) > parameters[p].resolution:
                     self._log.error(f'min value of {p} does not match')
                     error = True
-                if abs(maxv-parameters[p].maxv) > parameters[p].resolution:
+                if abs(maxv - parameters[p].maxv) > parameters[p].resolution:
                     self._log.error(f'max value of {p} does not match')
                     error = True
                 paramlist.remove(p)
@@ -133,12 +134,12 @@ class ObjectiveFunction:
         iparam = self._getiparam(params)
         cur = self.con.cursor()
         cur.execute(
-            'select state, result from lookup where '+self._select_str,
+            'select state, result from lookup where ' + self._select_str,
             iparam)
         r = cur.fetchone()
         if r is None:
             cur.execute(
-                'insert into lookup values '+self._insert_str,
+                'insert into lookup values ' + self._insert_str,
                 iparam)
             self.con.commit()
 

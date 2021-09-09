@@ -36,8 +36,7 @@ def test_objective_function_read(rundir, paramsA):
 testdata = [
     (-6, 0, 1e-6),
     (-5, 1, 1e-6),
-    (-5, 0, 1e-7)
-    ]
+    (-5, 0, 1e-7)]
 
 
 @pytest.mark.parametrize("minv,maxv,resolution", testdata)

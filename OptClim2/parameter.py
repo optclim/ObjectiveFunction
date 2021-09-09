@@ -51,7 +51,7 @@ class Parameter:
             raise ValueError(
                 f'{value} outside parameter '
                 'interval [{self.minv},{self.maxv}]')
-        return (value-self.minv)/(self.maxv-self.minv)
+        return (value - self.minv) / (self.maxv - self.minv)
 
     def value(self, scale: float) -> float:
         """convert to value from scaled value
@@ -62,7 +62,7 @@ class Parameter:
         if scale < 0 or scale > 1.0:
             raise ValueError(
                 f'{scale} outside interval [0,1]')
-        return self.minv+scale*(self.maxv-self.minv)
+        return self.minv + scale * (self.maxv - self.minv)
 
     def scale2int(self, scale: float) -> int:
         """convert scale to integer
@@ -73,7 +73,7 @@ class Parameter:
         if scale < 0 or scale > 1.0:
             raise ValueError(
                 f'{scale} outside interval [0,1]')
-        return round(scale/self.resolution)
+        return round(scale / self.resolution)
 
     def int2scale(self, iscale: int) -> float:
         """convert integer scale to float
@@ -81,7 +81,7 @@ class Parameter:
         :param iscale: scaled value
         :type iscale: int
         """
-        return iscale*self.resolution
+        return iscale * self.resolution
 
     def value2int(self, value: float) -> int:
         """scale value and convert to integer
