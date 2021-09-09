@@ -70,7 +70,23 @@ def test_select_str(objectiveA):
 
 
 def test_insert_str(objectiveA):
-    assert objectiveA._insert_str == '(:a,:b,:c,"n",null)'
+    assert objectiveA._insert_str == '(null,:a,:b,:c,"n",null)'
+
+
+def test_select_new_str(objectiveA):
+    assert objectiveA._select_new_str == 'a, b, c'
+
+
+def test_values2params(objectiveA):
+    assert objectiveA._values2params((0, 1, 2)) == {
+        'a': 0, 'b': 1, 'c': 2}
+
+
+def test_values2params_fail(objectiveA):
+    with pytest.raises(AssertionError):
+        objectiveA._values2params((0, 1))
+    with pytest.raises(AssertionError):
+        objectiveA._values2params((0, 1, 3, 4))
 
 
 @pytest.fixture
@@ -86,6 +102,12 @@ def resultA():
 def test_state_missing_param(objectiveA, valuesA):
     with pytest.raises(LookupError):
         objectiveA.state(valuesA)
+
+
+def test_get_new_fail(objectiveA, valuesA):
+    # no entries yet
+    with pytest.raises(RuntimeError):
+        objectiveA.get_new()
 
 
 def test_first_call(objectiveA, valuesA):
@@ -104,3 +126,19 @@ def test_second_call(objectiveA, valuesA, resultA):
     r = objectiveA(valuesA)
     assert isinstance(r, float)
     assert r != resultA
+
+
+def test_get_new(objectiveA, valuesA):
+    p = objectiveA.get_new()
+    assert p == valuesA
+
+
+def test_state_active(objectiveA, valuesA):
+    # the state should be new now
+    assert objectiveA.state(valuesA) == 'a'
+
+
+def test_get_new_fail2(objectiveA, valuesA):
+    # should fail now because if already consumed it
+    with pytest.raises(RuntimeError):
+        objectiveA.get_new()

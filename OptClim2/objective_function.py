@@ -16,6 +16,11 @@ class OptClimNewRun(Exception):
 class ObjectiveFunction:
     """class maintaining a lookup table for an objective function
 
+    the state of a parameter set can be on of
+     * n - new
+     * a - active
+     * c - completed
+
     :param basedir: the directory in which the lookup table is kept
     :type basedir: Path
     :param parameters: a dictionary mapping parameter names to the range of
@@ -35,11 +40,10 @@ class ObjectiveFunction:
         dbName = basedir / 'objective_function.sqlite'
 
         # generate database query strings
-        paramlist = list(parameters.keys())
-        paramlist.sort()
+        self._paramlist = tuple(sorted(list(parameters.keys())))
         slct = []
         insrt = []
-        for p in paramlist:
+        for p in self._paramlist:
             # make sure that parameter names are alpha numeric to avoid
             # sql injection attacks
             if not p.isalnum():
@@ -48,8 +52,9 @@ class ObjectiveFunction:
             insrt.append(f':{p}')
         insrt.append('"n"')
         insrt.append('null')
+        self._select_new_str = ', '.join(self._paramlist)
         self._select_str = ' and '.join(slct)
-        self._insert_str = '(' + ','.join(insrt) + ')'
+        self._insert_str = '(null,' + ','.join(insrt) + ')'
 
         if not dbName.exists():
             self._log.info('create db')
@@ -61,7 +66,7 @@ class ObjectiveFunction:
                 (name text, minv real, maxv real, resolution real);
                 """)
             cols = []
-            for p in paramlist:
+            for p in self._paramlist:
                 cols.append(f'{p} integer')
                 cur.execute("insert into parameters values (?,?,?,?);",
                             (p, parameters[p].minv, parameters[p].maxv,
@@ -69,8 +74,9 @@ class ObjectiveFunction:
             cols.append("state text")
             cols.append("result float")
             cur.execute(
-                "create table if not exists lookup ({0});".format(
-                    ",".join(cols)))
+                "create table if not exists lookup ("
+                "id integer primary key autoincrement, "
+                "{0});".format(",".join(cols)))
             self.con.commit()
         else:
             self._log.info('checking db')
@@ -111,7 +117,19 @@ class ObjectiveFunction:
     def parameters(self):
         return self._parameters
 
-    def _getiparam(self, params):
+    def _values2params(self, values):
+        """create a dictionary of parameter values from list of values
+
+        :param values: a list/tuple of values
+        :return: a dictionary of parameters
+        """
+        assert len(values) == len(self._paramlist)
+        params = {}
+        for i, p in enumerate(self._paramlist):
+            params[p] = values[i]
+        return params
+
+    def _getIparam(self, params):
         """convert dictionary of real valued parameters to scaled integer
         parameters"""
         if len(params) != len(self.parameters):
@@ -123,6 +141,18 @@ class ObjectiveFunction:
             iparam[p] = self.parameters[p].value2int(params[p])
         return iparam
 
+    def _getRparam(self, params):
+        """convert dictionary of integer valued parameters to real
+           parameters"""
+        if len(params) != len(self.parameters):
+            raise RuntimeError("the number of parameters does not match")
+        rparam = {}
+        for p in params:
+            if p not in self.parameters:
+                raise RuntimeError(f'parameter {p} not found')
+            rparam[p] = self.parameters[p].int2value(params[p])
+        return rparam
+
     def state(self, params):
         """look up parameters
 
@@ -130,7 +160,7 @@ class ObjectiveFunction:
         :raises LookupError: if entry for parameter set does not exist
         :return: string containing state
         """
-        iparam = self._getiparam(params)
+        iparam = self._getIparam(params)
         cur = self.con.cursor()
         cur.execute(
             'select state from lookup where ' + self._select_str,
@@ -148,7 +178,7 @@ class ObjectiveFunction:
         :return: returns the value if lookup succeeds and state is completed
                  return a random value otherwise
         """
-        iparam = self._getiparam(params)
+        iparam = self._getIparam(params)
         cur = self.con.cursor()
         cur.execute(
             'select state, result from lookup where ' + self._select_str,
@@ -166,6 +196,30 @@ class ObjectiveFunction:
             return r[1]
         else:
             return random.random()
+
+    def get_new(self):
+        """get a set of parameters that are not yet processed
+
+        The parameter set changes set from new to active
+
+        :return: dictionary of parameter values for which to compute the model
+        :raises RuntimeError: if there is no new parameter set
+        """
+        cur = self.con.cursor()
+        cur.execute(
+            'select id,' + self._select_new_str + ' from lookup '
+            'where state = "n";')
+        r = cur.fetchone()
+        if r is None:
+            raise RuntimeError('no new parameter sets')
+
+        param = self._values2params(r[1:])
+        pid = r[0]
+
+        cur.execute('update lookup set state = ? where id = ?;', ('a', pid))
+        self.con.commit()
+
+        return self._getRparam(param)
 
 
 if __name__ == '__main__':
