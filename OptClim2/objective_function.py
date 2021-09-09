@@ -123,12 +123,29 @@ class ObjectiveFunction:
             iparam[p] = self.parameters[p].value2int(params[p])
         return iparam
 
+    def state(self, params):
+        """look up parameters
+
+        :param parms: dictionary containing parameter values
+        :raises LookupError: if entry for parameter set does not exist
+        :return: string containing state
+        """
+        iparam = self._getiparam(params)
+        cur = self.con.cursor()
+        cur.execute(
+            'select state from lookup where ' + self._select_str,
+            iparam)
+        r = cur.fetchone()
+        if r is None:
+            raise LookupError("no entry for parameter set found")
+        return r[0]
+
     def __call__(self, params):
         """look up parameters
 
         :param parms: dictionary containing parameter values
-        :result: raises OptClimNewRun if lookup fails
-                 returns the value if lookup succeeds and state is completed
+        :raises OptClimNewRun: when lookup fails
+        :return: returns the value if lookup succeeds and state is completed
                  return a random value otherwise
         """
         iparam = self._getiparam(params)

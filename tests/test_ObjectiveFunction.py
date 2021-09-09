@@ -83,10 +83,20 @@ def resultA():
     return 1000.
 
 
+def test_state_missing_param(objectiveA, valuesA):
+    with pytest.raises(LookupError):
+        objectiveA.state(valuesA)
+
+
 def test_first_call(objectiveA, valuesA):
     # should fail since the values are not in the lookup table
     with pytest.raises(OptClimNewRun):
         objectiveA(valuesA)
+
+
+def test_state_new(objectiveA, valuesA):
+    # the state should be new now
+    assert objectiveA.state(valuesA) == 'n'
 
 
 def test_second_call(objectiveA, valuesA, resultA):
