@@ -1,3 +1,5 @@
+__all__ = ['OptclimConfig']
+
 import logging
 from configobj import ConfigObj, flatten_errors
 from validate import Validator
