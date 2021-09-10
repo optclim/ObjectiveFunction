@@ -1,2 +1,2 @@
-from .config import OptclimConfig  # noqa: F401
+from .config import *  # noqa: F401,F403
 from .parameter import Parameter   # noqa: F401
