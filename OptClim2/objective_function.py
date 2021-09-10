@@ -170,7 +170,17 @@ class ObjectiveFunction:
             raise LookupError("no entry for parameter set found")
         return r[0]
 
-    def __call__(self, params):
+    def __call__(self, x):
+        """look up parameters
+
+        :param x: vector containing parameter values
+        :raises OptClimNewRun: when lookup fails
+        :return: returns the value if lookup succeeds and state is completed
+                 return a random value otherwise
+        """
+        return self.get_result(self._values2params(x))
+
+    def get_result(self, params):
         """look up parameters
 
         :param parms: dictionary containing parameter values

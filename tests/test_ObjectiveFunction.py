@@ -116,11 +116,11 @@ def test_get_new_fail(objectiveA, valuesA):
 def test_lookup_parameters(objectiveA, valuesA, resultA):
     # should fail since the values are not in the lookup table
     with pytest.raises(OptClimNewRun):
-        objectiveA(valuesA)
+        objectiveA.get_result(valuesA)
     # the state should be new now
     assert objectiveA.state(valuesA) == 'n'
     # should succeed but return a random value
-    r = objectiveA(valuesA)
+    r = objectiveA.get_result(valuesA)
     assert isinstance(r, float)
     assert r != resultA
     # attempting to set result should fail because
@@ -145,8 +145,12 @@ def test_set_result(objectiveA, valuesA, resultA):
     # state should be completed
     assert objectiveA.state(valuesA) == 'c'
     # and we should be able to retrieve the value
-    assert objectiveA(valuesA) == resultA
+    assert objectiveA.get_result(valuesA) == resultA
     # this should fail because the value is in the wrong
     # state
     with pytest.raises(RuntimeError):
         objectiveA.set_result(valuesA, resultA)
+
+
+def test_call(objectiveA, valuesA, resultA):
+    assert objectiveA(list(valuesA.values())) == resultA
