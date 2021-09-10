@@ -5,7 +5,8 @@ from configobj import ConfigObj, flatten_errors
 from validate import Validator
 from pathlib import Path
 
-from .objective_function import Parameter
+from .objective_function import ObjectiveFunction
+from .parameter import Parameter
 
 defaultCfgStr = """
 [setup]
@@ -40,6 +41,7 @@ class OptclimConfig:
 
         self._params = None
         self._optimise_params = None
+        self._objfun = None
 
         if not fname.is_file():
             msg = f'no such configuration file {fname}'
@@ -114,6 +116,14 @@ class OptclimConfig:
             self._log.info(f'creating base directory {p}')
             p.mkdir(parents=True)
         return p
+
+    @property
+    def objectiveFunction(self):
+        """intantiate a ObjectiveFunction object from config object"""
+        if self._objfun is None:
+            self._objfun = ObjectiveFunction(
+                self.basedir, self.optimise_parameters)
+        return self._objfun
 
 
 if __name__ == '__main__':
