@@ -99,9 +99,12 @@ def resultA():
     return 1000.
 
 
-def test_state_missing_param(objectiveA, valuesA):
+def test_missing_param_set(objectiveA, valuesA):
+    # these should all fail because the param set is missing
     with pytest.raises(LookupError):
         objectiveA.state(valuesA)
+    with pytest.raises(LookupError):
+        objectiveA.set_result(valuesA, resultA)
 
 
 def test_get_new_fail(objectiveA, valuesA):
@@ -110,27 +113,18 @@ def test_get_new_fail(objectiveA, valuesA):
         objectiveA.get_new()
 
 
-def test_first_call(objectiveA, valuesA):
+def test_lookup_parameters(objectiveA, valuesA, resultA):
     # should fail since the values are not in the lookup table
     with pytest.raises(OptClimNewRun):
         objectiveA(valuesA)
-
-
-def test_state_new(objectiveA, valuesA):
     # the state should be new now
     assert objectiveA.state(valuesA) == 'n'
-
-
-def test_second_call(objectiveA, valuesA, resultA):
     # should succeed but return a random value
     r = objectiveA(valuesA)
     assert isinstance(r, float)
     assert r != resultA
-
-
-def test_set_result_fail(objectiveA, valuesA, resultA):
-    # this should fail because the value is in the wrong
-    # state
+    # attempting to set result should fail because
+    # parameter set is in wrong state ('n')
     with pytest.raises(RuntimeError):
         objectiveA.set_result(valuesA, resultA)
 
@@ -138,14 +132,8 @@ def test_set_result_fail(objectiveA, valuesA, resultA):
 def test_get_new(objectiveA, valuesA):
     p = objectiveA.get_new()
     assert p == valuesA
-
-
-def test_state_active(objectiveA, valuesA):
     # the state should be new now
     assert objectiveA.state(valuesA) == 'a'
-
-
-def test_get_new_fail2(objectiveA, valuesA):
     # should fail now because if already consumed it
     with pytest.raises(RuntimeError):
         objectiveA.get_new()
@@ -158,9 +146,6 @@ def test_set_result(objectiveA, valuesA, resultA):
     assert objectiveA.state(valuesA) == 'c'
     # and we should be able to retrieve the value
     assert objectiveA(valuesA) == resultA
-
-
-def test_set_result_fail2(objectiveA, valuesA, resultA):
     # this should fail because the value is in the wrong
     # state
     with pytest.raises(RuntimeError):
