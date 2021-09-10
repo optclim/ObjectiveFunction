@@ -1,4 +1,4 @@
-
+#!/bin/env python3
 
 def model(x, y, params):
     """a 2D quadratic test model
