@@ -221,6 +221,32 @@ class ObjectiveFunction:
 
         return self._getRparam(param)
 
+    def set_result(self, params, result):
+        """set the result for a paricular parameter set
+
+        :param parms: dictionary of parameters
+        :param result: result value to set
+        :type result: float
+        :raises LookupError: if entry for parameter set does not exist
+        :raises RuntimeError: if the parameter set is not in active state
+        """
+        iparam = self._getIparam(params)
+        cur = self.con.cursor()
+        cur.execute(
+            'select id, state from lookup where ' + self._select_str,
+            iparam)
+        r = cur.fetchone()
+        if r is None:
+            raise LookupError("no entry for parameter set found")
+        pid, state = r
+
+        if state != 'a':
+            raise RuntimeError(f'parameter set is in wrong state {state}')
+
+        cur.execute('update lookup set state = ?, result = ? where id = ?;',
+                    ('c', float(result), pid))
+        self.con.commit()
+
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)

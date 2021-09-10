@@ -128,6 +128,13 @@ def test_second_call(objectiveA, valuesA, resultA):
     assert r != resultA
 
 
+def test_set_result_fail(objectiveA, valuesA, resultA):
+    # this should fail because the value is in the wrong
+    # state
+    with pytest.raises(RuntimeError):
+        objectiveA.set_result(valuesA, resultA)
+
+
 def test_get_new(objectiveA, valuesA):
     p = objectiveA.get_new()
     assert p == valuesA
@@ -142,3 +149,19 @@ def test_get_new_fail2(objectiveA, valuesA):
     # should fail now because if already consumed it
     with pytest.raises(RuntimeError):
         objectiveA.get_new()
+
+
+def test_set_result(objectiveA, valuesA, resultA):
+    # set the value
+    objectiveA.set_result(valuesA, resultA)
+    # state should be completed
+    assert objectiveA.state(valuesA) == 'c'
+    # and we should be able to retrieve the value
+    assert objectiveA(valuesA) == resultA
+
+
+def test_set_result_fail2(objectiveA, valuesA, resultA):
+    # this should fail because the value is in the wrong
+    # state
+    with pytest.raises(RuntimeError):
+        objectiveA.set_result(valuesA, resultA)
