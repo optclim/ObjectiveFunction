@@ -1,0 +1,10 @@
+name: optclim
+dependencies:
+  - cylc-flow
+  - configobj
+  - pandas
+  - flake8
+  - pytest
+channels:
+  - defaults
+  - conda-forge
