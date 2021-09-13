@@ -4,6 +4,8 @@ import logging
 from configobj import ConfigObj, flatten_errors
 from validate import Validator
 from pathlib import Path
+from os.path import expandvars
+from io import StringIO
 
 from .objective_function import ObjectiveFunction
 from .parameter import Parameter
@@ -36,20 +38,23 @@ class OptclimConfig:
     """
     def __init__(self, fname: Path) -> None:
         self._log = logging.getLogger('OptClim2.config')
-        self._cfg = ConfigObj(configspec=optclimDefaults)
-        self._cfg.validate(validator)
-
-        self._params = None
-        self._optimise_params = None
-        self._objfun = None
 
         if not fname.is_file():
             msg = f'no such configuration file {fname}'
             self._log.error(msg)
             raise RuntimeError(msg)
 
-        self._cfg.filename = str(fname)
-        self._cfg.reload()
+        # read config file into string
+        cfgData = fname.open('r').read()
+        # expand any environment variables
+        cfgData = expandvars(cfgData)
+
+        self._cfg = ConfigObj(StringIO(cfgData), configspec=optclimDefaults)
+
+        self._params = None
+        self._optimise_params = None
+        self._objfun = None
+
         res = self._cfg.validate(validator, preserve_errors=True)
         errors = []
         # loop over any configuration errors
