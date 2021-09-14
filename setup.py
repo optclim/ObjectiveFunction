@@ -18,7 +18,7 @@ setup(
             'flake8>=3.5.0',
         ],
         'testing': [
-            'pytest',            
+            'pytest',
         ],
     },
     author=author,
