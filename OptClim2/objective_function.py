@@ -109,6 +109,9 @@ class ObjectiveFunction:
             if error:
                 raise RuntimeError('configuration does not match database')
 
+        self._lb = None
+        self._ub = None
+
     @property
     def con(self):
         return self._con
@@ -116,6 +119,26 @@ class ObjectiveFunction:
     @property
     def parameters(self):
         return self._parameters
+
+    @property
+    def lower_bounds(self):
+        """the a tuple containing the lower bounds"""
+        if self._lb is None:
+            self._lb = []
+            for p in self._paramlist:
+                self._lb.append(self.parameters[p].minv)
+            self._lb = tuple(self._lb)
+        return self._lb
+
+    @property
+    def upper_bounds(self):
+        """the a tuple containing the upper bounds"""
+        if self._ub is None:
+            self._ub = []
+            for p in self._paramlist:
+                self._ub.append(self.parameters[p].maxv)
+            self._ub = tuple(self._ub)
+        return self._ub
 
     def _values2params(self, values):
         """create a dictionary of parameter values from list of values

@@ -65,6 +65,14 @@ def objectiveA(rundir, paramsA):
     return ObjectiveFunction(rundir, paramsA)
 
 
+def test_lower_bounds(objectiveA):
+    assert objectiveA.lower_bounds == (-1, 0, -5)
+
+
+def test_upper_bounds(objectiveA):
+    assert objectiveA.upper_bounds == (1, 2, 0)
+
+
 def test_select_str(objectiveA):
     assert objectiveA._select_str == 'a=:a and b=:b and c=:c'
 
