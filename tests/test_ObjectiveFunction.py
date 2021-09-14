@@ -65,6 +65,10 @@ def objectiveA(rundir, paramsA):
     return ObjectiveFunction(rundir, paramsA)
 
 
+def test_num_params(objectiveA):
+    assert objectiveA.num_params == 3
+
+
 def test_lower_bounds(objectiveA):
     assert objectiveA.lower_bounds == (-1, 0, -5)
 

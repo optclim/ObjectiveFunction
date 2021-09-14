@@ -117,6 +117,11 @@ class ObjectiveFunction:
         return self._con
 
     @property
+    def num_params(self):
+        """the number of parameters"""
+        return len(self._parameters)
+
+    @property
     def parameters(self):
         return self._parameters
 
