@@ -1,0 +1,13 @@
+[scheduler]
+#    allow implicit tasks = True
+[scheduling]
+    [[graph]]
+        R1 = """
+	     setup => forward
+        """
+[runtime]
+  [[setup]]
+  script = model -g $CYLC_WORKFLOW_RUN_DIR/example.cfg
+
+  [[forward]]
+  script = model $CYLC_WORKFLOW_RUN_DIR/example.cfg
