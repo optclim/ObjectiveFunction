@@ -1,8 +1,8 @@
 import pytest
 import numpy
 
-from OptClim2.objective_function import Parameter, ObjectiveFunction
-from OptClim2.objective_function import OptClimNewRun
+from OptClim2 import Parameter, ObjectiveFunction
+from OptClim2 import OptClimNewRun, LookupState
 
 
 @pytest.fixture
@@ -83,7 +83,8 @@ def test_select_str(objectiveA):
 
 
 def test_insert_str(objectiveA):
-    assert objectiveA._insert_str == '(null,:a,:b,:c,"n",null)'
+    assert objectiveA._insert_str == '(null,:a,:b,:c,{},null)'.format(
+        LookupState.NEW.value)
 
 
 def test_select_new_str(objectiveA):
@@ -131,7 +132,7 @@ def test_lookup_parameters(objectiveA, valuesA, resultA):
     with pytest.raises(OptClimNewRun):
         objectiveA.get_result(valuesA)
     # the state should be new now
-    assert objectiveA.state(valuesA) == 'n'
+    assert objectiveA.state(valuesA) == LookupState.NEW
     # should succeed but return a random value
     r = objectiveA.get_result(valuesA)
     assert isinstance(r, float)
@@ -146,7 +147,7 @@ def test_get_new(objectiveA, valuesA):
     p = objectiveA.get_new()
     assert p == valuesA
     # the state should be new now
-    assert objectiveA.state(valuesA) == 'a'
+    assert objectiveA.state(valuesA) == LookupState.ACTIVE
     # should fail now because if already consumed it
     with pytest.raises(RuntimeError):
         objectiveA.get_new()
@@ -156,7 +157,7 @@ def test_set_result(objectiveA, valuesA, resultA):
     # set the value
     objectiveA.set_result(valuesA, resultA)
     # state should be completed
-    assert objectiveA.state(valuesA) == 'c'
+    assert objectiveA.state(valuesA) == LookupState.COMPLETED
     # and we should be able to retrieve the value
     assert objectiveA.get_result(valuesA) == resultA
     # this should fail because the value is in the wrong

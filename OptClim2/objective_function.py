@@ -1,10 +1,11 @@
-__all__ = ['OptClimNewRun', 'ObjectiveFunction']
+__all__ = ['OptClimNewRun', 'ObjectiveFunction', 'LookupState']
 
 import logging
 from typing import Mapping
 import sqlite3
 from pathlib import Path
 import random
+from enum import Enum
 
 from .parameter import Parameter
 
@@ -13,13 +14,14 @@ class OptClimNewRun(Exception):
     pass
 
 
+class LookupState(Enum):
+    NEW = 1
+    ACTIVE = 2
+    COMPLETED = 3
+
+
 class ObjectiveFunction:
     """class maintaining a lookup table for an objective function
-
-    the state of a parameter set can be on of
-     * n - new
-     * a - active
-     * c - completed
 
     :param basedir: the directory in which the lookup table is kept
     :type basedir: Path
@@ -50,7 +52,7 @@ class ObjectiveFunction:
                 raise ValueError(f'{p} should be alpha-numeric')
             slct.append(f'{p}=:{p}')
             insrt.append(f':{p}')
-        insrt.append('"n"')
+        insrt.append(str(LookupState['NEW'].value))
         insrt.append('null')
         self._select_new_str = ', '.join(self._paramlist)
         self._select_str = ' and '.join(slct)
@@ -71,7 +73,7 @@ class ObjectiveFunction:
                 cur.execute("insert into parameters values (?,?,?,?);",
                             (p, parameters[p].minv, parameters[p].maxv,
                              parameters[p].resolution))
-            cols.append("state text")
+            cols.append("state integer")
             cols.append("result float")
             cur.execute(
                 "create table if not exists lookup ("
@@ -196,7 +198,7 @@ class ObjectiveFunction:
         r = cur.fetchone()
         if r is None:
             raise LookupError("no entry for parameter set found")
-        return r[0]
+        return LookupState(r[0])
 
     def __call__(self, x, grad):
         """look up parameters
@@ -233,7 +235,7 @@ class ObjectiveFunction:
 
             raise OptClimNewRun()
 
-        if r[0] == 'c':
+        if LookupState(r[0]) == LookupState.COMPLETED:
             return r[1]
         else:
             return random.random()
@@ -249,7 +251,7 @@ class ObjectiveFunction:
         cur = self.con.cursor()
         cur.execute(
             'select id,' + self._select_new_str + ' from lookup '
-            'where state = "n";')
+            'where state = ?;', (LookupState.NEW.value, ))
         r = cur.fetchone()
         if r is None:
             raise RuntimeError('no new parameter sets')
@@ -257,7 +259,8 @@ class ObjectiveFunction:
         param = self._values2params(r[1:])
         pid = r[0]
 
-        cur.execute('update lookup set state = ? where id = ?;', ('a', pid))
+        cur.execute('update lookup set state = ? where id = ?;',
+                    (LookupState.ACTIVE.value, pid))
         self.con.commit()
 
         return self._getRparam(param)
@@ -281,11 +284,11 @@ class ObjectiveFunction:
             raise LookupError("no entry for parameter set found")
         pid, state = r
 
-        if state != 'a':
+        if LookupState(state) != LookupState.ACTIVE:
             raise RuntimeError(f'parameter set is in wrong state {state}')
 
         cur.execute('update lookup set state = ?, result = ? where id = ?;',
-                    ('c', float(result), pid))
+                    (LookupState.COMPLETED.value, float(result), pid))
         self.con.commit()
 
 
