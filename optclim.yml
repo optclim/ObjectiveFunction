@@ -1,6 +1,7 @@
 name: optclim
 dependencies:
   - cylc-flow
+  - nlopt
   - configobj
   - pandas
   - flake8
