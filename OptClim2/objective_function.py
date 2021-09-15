@@ -1,4 +1,5 @@
-__all__ = ['OptClimNewRun', 'ObjectiveFunction', 'LookupState']
+__all__ = ['OptClimNewRun', 'OptClimWaiting', 'ObjectiveFunction',
+           'LookupState']
 
 import logging
 from typing import Mapping
@@ -14,10 +15,15 @@ class OptClimNewRun(Exception):
     pass
 
 
+class OptClimWaiting(Exception):
+    pass
+
+
 class LookupState(Enum):
-    NEW = 1
-    ACTIVE = 2
-    COMPLETED = 3
+    PROVISIONAL = 1
+    NEW = 2
+    ACTIVE = 3
+    COMPLETED = 4
 
 
 class ObjectiveFunction:
@@ -52,7 +58,7 @@ class ObjectiveFunction:
                 raise ValueError(f'{p} should be alpha-numeric')
             slct.append(f'{p}=:{p}')
             insrt.append(f':{p}')
-        insrt.append(str(LookupState['NEW'].value))
+        insrt.append(str(LookupState.PROVISIONAL.value))
         insrt.append('null')
         self._select_new_str = ', '.join(self._paramlist)
         self._select_str = ' and '.join(slct)
@@ -224,20 +230,44 @@ class ObjectiveFunction:
         iparam = self._getIparam(params)
         cur = self.con.cursor()
         cur.execute(
-            'select state, result from lookup where ' + self._select_str,
+            'select state, id, result from lookup where ' + self._select_str,
             iparam)
         r = cur.fetchone()
         if r is None:
-            cur.execute(
-                'insert into lookup values ' + self._insert_str,
-                iparam)
+            # check if we already have a provisional value
+            cur.execute('select id from lookup where state = ?;',
+                        (LookupState.PROVISIONAL.value,))
+            r = cur.fetchone()
+            if r is None:
+                self._log.info('new provisional parameter set')
+                # a provisional value
+                cur.execute(
+                    'insert into lookup values ' + self._insert_str,
+                    iparam)
+                self.con.commit()
+                # return an invalid value
+                return -1.
+            else:
+                # we already have a provisional value
+                # delete the previous one and wait
+                self._log.info('remove provisional parameter set')
+                cur.execute(
+                    'delete from lookup where id = ?;', (r[0], ))
+                self.con.commit()
+                raise OptClimWaiting
+
+        state = LookupState(r[0])
+        if state == LookupState.PROVISIONAL:
+            self._log.info('provisional parameter set changed to new')
+            cur.execute('update lookup set state = ? where id = ?;',
+                        (LookupState.NEW.value, r[1]))
             self.con.commit()
-
-            raise OptClimNewRun()
-
-        if LookupState(r[0]) == LookupState.COMPLETED:
-            return r[1]
+            raise OptClimNewRun
+        elif state == LookupState.COMPLETED:
+            self._log.debug('hit completed parameter set')
+            return r[2]
         else:
+            self._log.debug('hit new/active parameter set')
             return random.random()
 
     def get_new(self):

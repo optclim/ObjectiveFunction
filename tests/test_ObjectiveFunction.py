@@ -2,7 +2,7 @@ import pytest
 import numpy
 
 from OptClim2 import Parameter, ObjectiveFunction
-from OptClim2 import OptClimNewRun, LookupState
+from OptClim2 import OptClimNewRun, OptClimWaiting, LookupState
 
 
 @pytest.fixture
@@ -84,7 +84,7 @@ def test_select_str(objectiveA):
 
 def test_insert_str(objectiveA):
     assert objectiveA._insert_str == '(null,:a,:b,:c,{},null)'.format(
-        LookupState.NEW.value)
+        LookupState.PROVISIONAL.value)
 
 
 def test_select_new_str(objectiveA):
@@ -109,26 +109,52 @@ def valuesA():
 
 
 @pytest.fixture
+def valuesB():
+    return {'a': 0.5, 'b': 1., 'c': -2}
+
+
+@pytest.fixture
 def resultA():
     return 1000.
 
 
-def test_missing_param_set(objectiveA, valuesA):
+def test_empty_loopup(objectiveA, valuesA):
     # these should all fail because the param set is missing
     with pytest.raises(LookupError):
         objectiveA.state(valuesA)
     with pytest.raises(LookupError):
         objectiveA.set_result(valuesA, resultA)
-
-
-def test_get_new_fail(objectiveA, valuesA):
-    # no entries yet
     with pytest.raises(RuntimeError):
         objectiveA.get_new()
 
 
-def test_lookup_parameters(objectiveA, valuesA, resultA):
-    # should fail since the values are not in the lookup table
+def test_lookup_parameters_one(objectiveA, valuesA, valuesB, resultA):
+    # test what happens when we insert a new value
+
+    # first time we lookup a parameter set we should get -1
+    assert objectiveA.get_result(valuesA) == -1.
+    # the state should be provisional now
+    assert objectiveA.state(valuesA) == LookupState.PROVISIONAL
+    # attempting to set result should fail because
+    # parameter set is not in the active state
+    with pytest.raises(RuntimeError):
+        objectiveA.set_result(valuesA, resultA)
+    # if we lookup a different parameter set with should get a wait exception
+    with pytest.raises(OptClimWaiting):
+        objectiveA.get_result(valuesB)
+    # and the previous entry should be deleted
+    with pytest.raises(LookupError):
+        objectiveA.state(valuesA)
+
+
+def test_lookup_parameters_two(objectiveA, valuesA, resultA):
+    # test what happens when we insert a new value
+
+    # first time we lookup a parameter set we should get -1
+    assert objectiveA.get_result(valuesA) == -1.
+    # the state should be provisional now
+    assert objectiveA.state(valuesA) == LookupState.PROVISIONAL
+    # a second lookup of the same parameter should get a new exception
     with pytest.raises(OptClimNewRun):
         objectiveA.get_result(valuesA)
     # the state should be new now
