@@ -1,4 +1,12 @@
 #!/bin/env python3
+import OptClim2
+import argparse
+from pathlib import Path
+import pandas
+import numpy
+import time
+import logging
+import sys
 
 def model(x, y, params):
     """a 2D quadratic test model
@@ -18,15 +26,13 @@ def model(x, y, params):
 
 
 if __name__ == '__main__':
-    import OptClim2
-    import argparse
-    from pathlib import Path
-    import pandas
-    import numpy
-
+    logging.basicConfig(level=logging.INFO)
+    
     parser = argparse.ArgumentParser()
     parser.add_argument('config', type=Path,
                         help='name of configuration file')
+    parser.add_argument('-d','--delay', type=int, default=0, metavar='SEC',
+                        help='delay setting results by SEC seconds, default=0')
     parser.add_argument('-s', '--scale', type=float, default=10,
                         help="scale for random noise to add to synthetic data")
     parser.add_argument('-g', '--generate', action='store_true', default=False,
@@ -38,6 +44,7 @@ if __name__ == '__main__':
 
     dname = cfg.basedir / 'synthetic.data'
     if args.generate:
+        logging.info('generating synthetic data')
         with dname.open('w') as output:
             for y in range(100):
                 y = y - 50
@@ -47,11 +54,13 @@ if __name__ == '__main__':
                         x, y, model(x, y, cfg.parameters) +  # noqa: W504
                         numpy.random.normal(scale=args.scale)))
     else:
+        logging.info('running model')
         objfun = cfg.objectiveFunction
         try:
             params = objfun.get_new()
         except Exception as e:
-            parser.error(e)
+            logging.error(e)
+            sys.exit(1)
 
         data = pandas.read_csv(dname, names=['x', 'y', 'z'])
 
@@ -65,4 +74,8 @@ if __name__ == '__main__':
         # and standard devation
         std = data['diff'].std()
 
+        if args.delay>0:
+            logging.info(f'waiting {args.delay} seconds')
+            time.sleep(arg.delay)
+        logging.info(f'misfit {std}')
         objfun.set_result(params, std)
