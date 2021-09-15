@@ -1,9 +1,16 @@
 [scheduler]
 #    allow implicit tasks = True
 [scheduling]
+    cycling mode = integer
+    initial cycle point = 1
     [[graph]]
         R1 = """
-	     setup => forward
+            setup
+        """
+        P1 = """
+             optimise:new => forward
+             optimise:wait => wait
+             forward[-P1]:started|wait[-P1] => optimise
         """
 [runtime]
   [[setup]]
@@ -11,3 +18,17 @@
 
   [[forward]]
   script = model $CYLC_WORKFLOW_RUN_DIR/example.cfg
+
+  [[optimise]]
+  script = """
+  status=$(optimise $CYLC_WORKFLOW_RUN_DIR/example.cfg)
+  cylc message -- "${CYLC_SUITE_NAME}" "${CYLC_TASK_JOB}" $status
+  """
+     [[[outputs]]]
+     wait = "waiting"
+     new = "new"
+
+  [[wait]]
+  script = """
+  sleep 10
+  """
