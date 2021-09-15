@@ -198,7 +198,7 @@ class ObjectiveFunction:
             raise LookupError("no entry for parameter set found")
         return r[0]
 
-    def __call__(self, x):
+    def __call__(self, x, grad):
         """look up parameters
 
         :param x: vector containing parameter values
@@ -206,6 +206,9 @@ class ObjectiveFunction:
         :return: returns the value if lookup succeeds and state is completed
                  return a random value otherwise
         """
+        if grad.size > 0:
+            raise RuntimeError(
+                'OptClim2 only supports derivative free optimisations')
         return self.get_result(self._values2params(x))
 
     def get_result(self, params):

@@ -1,4 +1,5 @@
 import pytest
+import numpy
 
 from OptClim2.objective_function import Parameter, ObjectiveFunction
 from OptClim2.objective_function import OptClimNewRun
@@ -165,4 +166,4 @@ def test_set_result(objectiveA, valuesA, resultA):
 
 
 def test_call(objectiveA, valuesA, resultA):
-    assert objectiveA(list(valuesA.values())) == resultA
+    assert objectiveA(list(valuesA.values()), numpy.array([])) == resultA
