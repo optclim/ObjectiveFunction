@@ -10,6 +10,7 @@ Welcome to OptClim2's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   objfun
    api
 
 
