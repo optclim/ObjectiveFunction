@@ -1,4 +1,5 @@
 from setuptools import setup, find_packages
+from sphinx.setup_command import BuildDoc
 
 name = 'OptClim2'
 version = '0.1'
@@ -13,7 +14,20 @@ setup(
     install_requires=[
         'configobj',
     ],
+    cmdclass={'build_sphinx': BuildDoc},
+    command_options={
+        'build_sphinx': {
+            'project': ('setup.py', name),
+            'version': ('setup.py', version),
+            'release': ('setup.py', release),
+            'copyright': ('setup.py', author),
+            'source_dir': ('setup.py', 'docs')}},
+    setup_requires=['sphinx'],
     extras_require={
+        'docs': [
+            'sphinx<4.0',
+            'sphinx_rtd_theme',
+        ],
         'lint': [
             'flake8>=3.5.0',
         ],
