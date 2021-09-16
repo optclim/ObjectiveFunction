@@ -1,0 +1,28 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+- family-names: "Hagdorn"
+  given-names: "Magnus"
+  orcid: "https://orcid.org/0000-0002-5076-4864"
+- family-names: "Mineter"
+  given-names: "Michael"
+- family-names: "Tett"
+  given-names: "Simon"
+title: "OptClim2"
+version: 0.1.0
+url: https://github.com/optclim/OptClim2
+references:
+ - authors:
+   - family-names: "Gorman"
+     given-names: "Richard"
+   - family-names: "Oliver"
+     given-names: Hilary
+   doi: 10.5194/gmd-11-2153-2018
+   journal: Geoscientific Model Development
+   volume: 11
+   year: 2018
+   month: 06
+   pages: 2153-2173
+   title: Automated model optimisation using the Cylc workflow engine (Cyclops v1.0)
+   type: article
+
