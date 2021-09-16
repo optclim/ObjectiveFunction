@@ -12,14 +12,23 @@ from .parameter import Parameter
 
 
 class OptClimNewRun(Exception):
+    """Exception used when a new entry in the lookup table was created"""
     pass
 
 
 class OptClimWaiting(Exception):
+    """Exception used to indicate that entries need to be completed"""
     pass
 
 
 class LookupState(Enum):
+    """the state of the parameter set
+
+     * PROVISIONAL: new entry under consideration
+     * NEW: new parameter set
+     * ACTIVE: parameter set being computed
+     * COMPLETED: completed parameter set
+    """
     PROVISIONAL = 1
     NEW = 2
     ACTIVE = 3
@@ -131,11 +140,12 @@ class ObjectiveFunction:
 
     @property
     def parameters(self):
+        """dictionary of parameters"""
         return self._parameters
 
     @property
     def lower_bounds(self):
-        """the a tuple containing the lower bounds"""
+        """a tuple containing the lower bounds"""
         if self._lb is None:
             self._lb = []
             for p in self._paramlist:
@@ -145,7 +155,7 @@ class ObjectiveFunction:
 
     @property
     def upper_bounds(self):
-        """the a tuple containing the upper bounds"""
+        """a tuple containing the upper bounds"""
         if self._ub is None:
             self._ub = []
             for p in self._paramlist:
@@ -194,7 +204,8 @@ class ObjectiveFunction:
 
         :param parms: dictionary containing parameter values
         :raises LookupError: if entry for parameter set does not exist
-        :return: string containing state
+        :return: state
+        :rtype: LookupState
         """
         iparam = self._getIparam(params)
         cur = self.con.cursor()
@@ -210,9 +221,13 @@ class ObjectiveFunction:
         """look up parameters
 
         :param x: vector containing parameter values
+        :param grad: vector of length 0
+        :type grad: numpy.ndarray
         :raises OptClimNewRun: when lookup fails
+        :raises OptClimWaiting: when completed entries are required
         :return: returns the value if lookup succeeds and state is completed
                  return a random value otherwise
+        :rtype: float
         """
         if grad.size > 0:
             raise RuntimeError(
@@ -224,8 +239,10 @@ class ObjectiveFunction:
 
         :param parms: dictionary containing parameter values
         :raises OptClimNewRun: when lookup fails
+        :raises OptClimWaiting: when completed entries are required
         :return: returns the value if lookup succeeds and state is completed
                  return a random value otherwise
+        :rtype: float
         """
         iparam = self._getIparam(params)
         cur = self.con.cursor()
