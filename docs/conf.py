@@ -15,7 +15,6 @@
 import os
 import sys
 sys.path.insert(0, os.path.abspath('..'))
-print(sys.path)
 
 
 # -- General configuration ------------------------------------------------
@@ -177,3 +176,14 @@ epub_title = project
 
 # A list of files that should not be packed into the epub file.
 epub_exclude_files = ['search.html']
+
+
+# document __call__ method
+# see https://newbedev.com/how-to-use-sphinx-s-autodoc-to-document-a-class-s-init-self-method
+def skip(app, what, name, obj, would_skip, options):
+    if name == "__call__":
+        return False
+    return would_skip
+
+def setup(app):
+    app.connect("autodoc-skip-member", skip)
