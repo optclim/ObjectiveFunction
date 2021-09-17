@@ -17,11 +17,11 @@ args = parser.parse_args()
 cfg = OptClim2.OptclimConfig(args.config)
 objfun = cfg.objectiveFunction
 
-# In case we are using a stochastic method, use a "deterministic" 
+# In case we are using a stochastic method, use a "deterministic"
 # sequence of pseudorandom numbers, to be repeatable:
 nlopt.srand(1)
 
-#opt = nlopt.opt(nlopt.LN_BOBYQA, objfun.num_params)
+# opt = nlopt.opt(nlopt.LN_BOBYQA, objfun.num_params)
 opt = nlopt.opt(nlopt.LN_COBYLA, objfun.num_params)
 opt.set_lower_bounds(objfun.lower_bounds)
 opt.set_upper_bounds(objfun.upper_bounds)
@@ -41,7 +41,7 @@ for i in range(2):
 
     minf = opt.last_optimum_value()
     results = opt.last_optimize_result()
-    
+
     if results == 1:
         break
 
