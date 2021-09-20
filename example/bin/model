@@ -7,6 +7,7 @@ import numpy
 import time
 import logging
 import sys
+import random
 
 def model(x, y, params):
     """a 2D quadratic test model
@@ -45,13 +46,23 @@ if __name__ == '__main__':
     dname = cfg.basedir / 'synthetic.data'
     if args.generate:
         logging.info('generating synthetic data')
+        # create a random parameter set
+        params = {}
+        # generate a random value from parameter range
+        for p in cfg.optimise_parameters:
+            params[p] = random.uniform(cfg.optimise_parameters[p].minv,
+                                       cfg.optimise_parameters[p].maxv)
+        pname = cfg.basedir / 'parameters.data'
+        with pname.open('w') as poutput:
+            for p in params:
+                poutput.write(f'{p} {params[p]}\n')
         with dname.open('w') as output:
             for y in range(100):
                 y = y - 50
                 for x in range(100):
                     x = x - 50
                     output.write('{0},{1},{2}\n'.format(
-                        x, y, model(x, y, cfg.parameters) +  # noqa: W504
+                        x, y, model(x, y, params) +  # noqa: W504
                         numpy.random.normal(scale=args.scale)))
     else:
         logging.info('running model')
