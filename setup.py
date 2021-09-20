@@ -35,6 +35,11 @@ setup(
             'pytest',
         ],
     },
+    entry_points={
+        'console_scripts': [
+            'optclim2 = OptClim2.optimise:main',
+        ],
+    },
     author=author,
     description="OptClim2 optimisation framework for cylc workflows",
 )
