@@ -1,53 +1,82 @@
-#!/bin/env python3
-
-import OptClim2
 import argparse
 from pathlib import Path
 import nlopt
 import sys
 import logging
 
-logging.basicConfig(level=logging.INFO)
-
-parser = argparse.ArgumentParser()
-parser.add_argument('config', type=Path,
-                    help='name of configuration file')
-args = parser.parse_args()
-
-cfg = OptClim2.OptclimConfig(args.config)
-objfun = cfg.objectiveFunction
+from .config import OptclimConfig
+from .objective_function import OptClimNewRun, OptClimWaiting
 
 # In case we are using a stochastic method, use a "deterministic"
 # sequence of pseudorandom numbers, to be repeatable:
 nlopt.srand(1)
 
-# opt = nlopt.opt(nlopt.LN_BOBYQA, objfun.num_params)
-opt = nlopt.opt(nlopt.LN_COBYLA, objfun.num_params)
-opt.set_lower_bounds(objfun.lower_bounds)
-opt.set_upper_bounds(objfun.upper_bounds)
-opt.set_min_objective(objfun)
-opt.set_xtol_rel(1e-2)
-opt.set_stopval(-0.1)
-for i in range(2):
-    # start with lower bounds
-    try:
-        x = opt.optimize(objfun.lower_bounds)
-    except OptClim2.OptClimNewRun:
-        print('new')
-        sys.exit(0)
-    except OptClim2.OptClimWaiting:
-        print('waiting')
-        sys.exit(0)
 
-    minf = opt.last_optimum_value()
-    results = opt.last_optimize_result()
+class NLOptClimConfig(OptclimConfig):
+    defaultCfgStr = OptclimConfig.defaultCfgStr + """
+    [nlopt]
+    algorithm = string()
+    """
 
-    if results == 1:
-        break
+    def __init__(self, fname: Path) -> None:
+        super().__init__(fname)
+        self._log = logging.getLogger('OptClim2.optimisecfg')
+        self._opt = None
+
+    @property
+    def optimiser(self):
+        if self._opt is None:
+            try:
+                alg = getattr(nlopt, self.cfg['nlopt']['algorithm'])
+            except AttributeError:
+                e = 'no such algorithm {}'.format(
+                    self.cfg['nlopt']['algorithm'])
+                self._log.error(e)
+                raise RuntimeError(e)
+            self._opt = nlopt.opt(alg, self.objectiveFunction.num_params)
+            self._opt.set_lower_bounds(self.objectiveFunction.lower_bounds)
+            self._opt.set_upper_bounds(self.objectiveFunction.upper_bounds)
+            self._opt.set_min_objective(self.objectiveFunction)
+            self._opt.set_stopval(-0.1)
+            self._opt.set_xtol_rel(1e-2)
+        return self._opt
 
 
-logging.info(f"optimum at {x}")
-logging.info(f"minimum value {minf}")
-logging.info(f"result code {results}")
+def main():
+    logging.basicConfig(level=logging.INFO)
+    log = logging.getLogger('OptClim2.optimise')
 
-print('done')
+    parser = argparse.ArgumentParser()
+    parser.add_argument('config', type=Path,
+                        help='name of configuration file')
+    args = parser.parse_args()
+
+    cfg = NLOptClimConfig(args.config)
+    opt = cfg.optimiser
+    for i in range(2):
+        # start with lower bounds
+        try:
+            x = opt.optimize(
+                cfg.objectiveFunction.params2values(cfg.parameters))
+        except OptClimNewRun:
+            print('new')
+            sys.exit(0)
+        except OptClimWaiting:
+            print('waiting')
+            sys.exit(0)
+
+        minf = opt.last_optimum_value()
+        results = opt.last_optimize_result()
+
+        if results == 1:
+            break
+
+    log.info(f"minimum value {minf}")
+    log.info(f"result code {results}")
+    log.info(f"optimum at {x}")
+
+    print('done')
+
+
+if __name__ == '__main__':
+    main()
