@@ -92,15 +92,26 @@ def test_select_new_str(objectiveA):
 
 
 def test_values2params(objectiveA):
-    assert objectiveA._values2params((0, 1, 2)) == {
+    assert objectiveA.values2params((0, 1, 2)) == {
         'a': 0, 'b': 1, 'c': 2}
 
 
 def test_values2params_fail(objectiveA):
     with pytest.raises(AssertionError):
-        objectiveA._values2params((0, 1))
+        objectiveA.values2params((0, 1))
     with pytest.raises(AssertionError):
-        objectiveA._values2params((0, 1, 3, 4))
+        objectiveA.values2params((0, 1, 3, 4))
+
+
+def test_params2values(objectiveA):
+    assert objectiveA.params2values(
+        {'a': 0, 'b': 1, 'c': 2}) == (0, 1, 2)
+
+
+def test_params2values_fail(objectiveA):
+    with pytest.raises(KeyError):
+        objectiveA.values2params(
+            {'d': 0, 'b': 1, 'c': 2})
 
 
 @pytest.fixture

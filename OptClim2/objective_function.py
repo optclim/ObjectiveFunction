@@ -163,7 +163,7 @@ class ObjectiveFunction:
             self._ub = tuple(self._ub)
         return self._ub
 
-    def _values2params(self, values):
+    def values2params(self, values):
         """create a dictionary of parameter values from list of values
 
         :param values: a list/tuple of values
@@ -174,6 +174,17 @@ class ObjectiveFunction:
         for i, p in enumerate(self._paramlist):
             params[p] = values[i]
         return params
+
+    def params2values(self, params):
+        """create a tuple of values from a dictionary of parameters
+
+        :param params: a dictionary of parameters
+        :return: a tuple of values
+        """
+        values = []
+        for p in self._paramlist:
+            values.append(params[p])
+        return tuple(values)
 
     def _getIparam(self, params):
         """convert dictionary of real valued parameters to scaled integer
@@ -232,7 +243,7 @@ class ObjectiveFunction:
         if grad.size > 0:
             raise RuntimeError(
                 'OptClim2 only supports derivative free optimisations')
-        return self.get_result(self._values2params(x))
+        return self.get_result(self.values2params(x))
 
     def get_result(self, params):
         """look up parameters
@@ -303,7 +314,7 @@ class ObjectiveFunction:
         if r is None:
             raise RuntimeError('no new parameter sets')
 
-        param = self._values2params(r[1:])
+        param = self.values2params(r[1:])
         pid = r[0]
 
         cur.execute('update lookup set state = ? where id = ?;',
