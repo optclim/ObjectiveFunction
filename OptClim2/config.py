@@ -10,25 +10,6 @@ from io import StringIO
 from .objective_function import ObjectiveFunction
 from .parameter import Parameter
 
-defaultCfgStr = """
-[setup]
-  basedir = string() # the base directory
-
-[parameters]
-  [[__many__]]
-    value = float() # the default value
-    min = float(default=None) # the minimum value allowed
-    max = float(default=None) # the maximum value allowed
-    resolution = float(default=1e-6) # the resolution of the parameter
-    constant = boolean(default=False) # if set to True the parameter is
-                                      # not optimised for
-"""
-
-# populate the default  config object which is used as a validator
-optclimDefaults = ConfigObj(defaultCfgStr.split('\n'),
-                            list_values=False, _inspec=True)
-validator = Validator()
-
 
 class OptclimConfig:
     """handle OptClim configuration
@@ -36,6 +17,21 @@ class OptclimConfig:
     :param fname: the name of the configuration file
     :type fname: Path
     """
+
+    defaultCfgStr = """
+    [setup]
+      basedir = string() # the base directory
+
+    [parameters]
+      [[__many__]]
+        value = float() # the default value
+        min = float(default=None) # the minimum value allowed
+        max = float(default=None) # the maximum value allowed
+        resolution = float(default=1e-6) # the resolution of the parameter
+        constant = boolean(default=False) # if set to True the parameter is
+                                          # not optimised for
+    """
+
     def __init__(self, fname: Path) -> None:
         self._log = logging.getLogger('OptClim2.config')
 
@@ -48,6 +44,11 @@ class OptclimConfig:
         cfgData = fname.open('r').read()
         # expand any environment variables
         cfgData = expandvars(cfgData)
+
+        # populate the default  config object which is used as a validator
+        optclimDefaults = ConfigObj(self.defaultCfgStr.split('\n'),
+                                    list_values=False, _inspec=True)
+        validator = Validator()
 
         self._cfg = ConfigObj(StringIO(cfgData), configspec=optclimDefaults)
 
