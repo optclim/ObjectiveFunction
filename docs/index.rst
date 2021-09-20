@@ -12,7 +12,7 @@ Welcome to OptClim2's documentation!
 
    objfun
    api
-
+   example
 
 Indices and tables
 ==================
