@@ -4,13 +4,13 @@ rm -rf $CYLC_WORKFLOW_WORK_DIR
 
 while /bin/true
 do
-    res=$(./example/bin/optimise example/example.cfg)
+    res=$(optclim2 example/example.cfg)
     if [ $res = "done" ]; then
 	break
     fi
     while [ $res = "new" ]
     do
-	res=$(./example/bin/optimise example/example.cfg)
+	res=$(optclim2 example/example.cfg)
     done
     while ./example/bin/model example/example.cfg
     do
