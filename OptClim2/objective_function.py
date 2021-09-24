@@ -55,9 +55,6 @@ class ObjectiveFunction:
                  parameters: Mapping[str, Parameter]):
         """constructor"""
 
-        if self.RESULT_TYPE is None:
-            raise NotImplementedError
-
         if len(parameters) == 0:
             raise RuntimeError('no parameters given')
 
@@ -99,7 +96,8 @@ class ObjectiveFunction:
                             (p, parameters[p].minv, parameters[p].maxv,
                              parameters[p].resolution))
             cols.append("state integer")
-            cols.append(f"result {self.RESULT_TYPE}")
+            if self.RESULT_TYPE is not None:
+                cols.append(f"result {self.RESULT_TYPE}")
             cur.execute(
                 "create table if not exists lookup ("
                 "id integer primary key autoincrement, "
