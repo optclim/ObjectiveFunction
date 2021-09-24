@@ -1,5 +1,5 @@
-__all__ = ['OptClimNewRun', 'OptClimWaiting', 'ObjectiveFunction',
-           'LookupState']
+__all__ = ['OptClimPreliminaryRun', 'OptClimNewRun', 'OptClimWaiting',
+           'ObjectiveFunction', 'LookupState']
 
 import logging
 from typing import Mapping
@@ -9,6 +9,12 @@ import random
 from enum import Enum
 
 from .parameter import Parameter
+
+
+class OptClimPreliminaryRun(Exception):
+    """Exception used when a preliminary entry in the lookup
+    table was created"""
+    pass
 
 
 class OptClimNewRun(Exception):
@@ -273,8 +279,7 @@ class ObjectiveFunction:
                     'insert into lookup values ' + self._insert_str,
                     iparam)
                 self.con.commit()
-                # return an invalid value
-                return -1.
+                raise OptClimPreliminaryRun
             else:
                 # we already have a provisional value
                 # delete the previous one and wait

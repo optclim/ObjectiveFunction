@@ -15,7 +15,7 @@ The lookup table is queried using either the :meth:`OptClim2.ObjectiveFunction.g
    * - :meth:`get_result(A) <OptClim2.ObjectiveFunction.get_result>`
      - N/A
      - PROVISIONAL
-     - -1
+     - raises :exc:`OptClim2.OptClimPreliminaryRun`
    * - :meth:`get_result(A) <OptClim2.ObjectiveFunction.get_result>`
      - PROVISIONAL
      - NEW

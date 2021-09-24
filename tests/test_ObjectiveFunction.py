@@ -2,7 +2,8 @@ import pytest
 import numpy
 
 from OptClim2 import Parameter, ObjectiveFunction
-from OptClim2 import OptClimNewRun, OptClimWaiting, LookupState
+from OptClim2 import OptClimPreliminaryRun, OptClimNewRun, OptClimWaiting
+from OptClim2 import LookupState
 
 
 @pytest.fixture
@@ -142,8 +143,9 @@ def test_empty_loopup(objectiveA, valuesA):
 def test_lookup_parameters_one(objectiveA, valuesA, valuesB, resultA):
     # test what happens when we insert a new value
 
-    # first time we lookup a parameter set we should get -1
-    assert objectiveA.get_result(valuesA) == -1.
+    # first time we lookup a parameter should raise OptClimPreliminaryRun
+    with pytest.raises(OptClimPreliminaryRun):
+        objectiveA.get_result(valuesA)
     # the state should be provisional now
     assert objectiveA.state(valuesA) == LookupState.PROVISIONAL
     # attempting to set result should fail because
@@ -161,8 +163,9 @@ def test_lookup_parameters_one(objectiveA, valuesA, valuesB, resultA):
 def test_lookup_parameters_two(objectiveA, valuesA, resultA):
     # test what happens when we insert a new value
 
-    # first time we lookup a parameter set we should get -1
-    assert objectiveA.get_result(valuesA) == -1.
+    # first time we lookup a parameter should raise OptClimPreliminaryRun
+    with pytest.raises(OptClimPreliminaryRun):
+        objectiveA.get_result(valuesA)
     # the state should be provisional now
     assert objectiveA.state(valuesA) == LookupState.PROVISIONAL
     # a second lookup of the same parameter should get a new exception
