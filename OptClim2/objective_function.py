@@ -340,6 +340,13 @@ class ObjectiveFunction:
 
         return self._getRparam(param)
 
+    def _set_result(self, result):
+        """convert result to value to be stored in lookup table
+
+        :param result: result as computed by real objective function
+        :return: value to be stored in lookup table"""
+        raise NotImplementedError
+
     def set_result(self, params, result):
         """set the result for a paricular parameter set
 
@@ -363,7 +370,8 @@ class ObjectiveFunction:
             raise RuntimeError(f'parameter set is in wrong state {state}')
 
         cur.execute('update lookup set state = ?, result = ? where id = ?;',
-                    (LookupState.COMPLETED.value, float(result), pid))
+                    (LookupState.COMPLETED.value,
+                     self._set_result(result), pid))
         self.con.commit()
 
 

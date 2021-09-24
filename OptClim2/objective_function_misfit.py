@@ -29,3 +29,11 @@ class ObjectiveFunctionMisfit(ObjectiveFunction):
             return random.random()
         else:
             return result
+
+    def _set_result(self, result):
+        """convert result to value to be stored in lookup table
+
+        :param result: result as computed by real objective function
+        :return: value to be stored in lookup table"""
+
+        return float(result)
