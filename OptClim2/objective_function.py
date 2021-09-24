@@ -1,11 +1,10 @@
 __all__ = ['OptClimPreliminaryRun', 'OptClimNewRun', 'OptClimWaiting',
-           'ObjectiveFunction', 'LookupState']
+           'LookupState']
 
 import logging
 from typing import Mapping
 import sqlite3
 from pathlib import Path
-import random
 from enum import Enum
 
 from .parameter import Parameter
@@ -50,15 +49,20 @@ class ObjectiveFunction:
         permissible parameter values
     """
 
+    RESULT_TYPE = None
+
     def __init__(self, basedir: Path,                   # noqa: C901
                  parameters: Mapping[str, Parameter]):
         """constructor"""
+
+        if self.RESULT_TYPE is None:
+            raise NotImplementedError
 
         if len(parameters) == 0:
             raise RuntimeError('no parameters given')
 
         self._parameters = parameters
-        self._log = logging.getLogger('OptClim2.ObjectiveFunction')
+        self._log = logging.getLogger(f'OptClim2.{self.__class__.__name__}')
 
         dbName = basedir / 'objective_function.sqlite'
 
@@ -95,7 +99,7 @@ class ObjectiveFunction:
                             (p, parameters[p].minv, parameters[p].maxv,
                              parameters[p].resolution))
             cols.append("state integer")
-            cols.append("result float")
+            cols.append(f"result {self.RESULT_TYPE}")
             cur.execute(
                 "create table if not exists lookup ("
                 "id integer primary key autoincrement, "
@@ -251,6 +255,14 @@ class ObjectiveFunction:
                 'OptClim2 only supports derivative free optimisations')
         return self.get_result(self.values2params(x))
 
+    def _get_result(self, result=None):
+        """get result from information stored in lookup table
+
+        :param result: the result value stored in the lookup table or None
+                       when the result is not yet known
+        """
+        raise NotImplementedError
+
     def get_result(self, params):
         """look up parameters
 
@@ -298,10 +310,10 @@ class ObjectiveFunction:
             raise OptClimNewRun
         elif state == LookupState.COMPLETED:
             self._log.debug('hit completed parameter set')
-            return r[2]
+            return self._get_result(r[2])
         else:
             self._log.debug('hit new/active parameter set')
-            return random.random()
+            return self._get_result(r[2])
 
     def get_new(self):
         """get a set of parameters that are not yet processed

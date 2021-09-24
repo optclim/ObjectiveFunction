@@ -7,7 +7,7 @@ from pathlib import Path
 from os.path import expandvars
 from io import StringIO
 
-from .objective_function import ObjectiveFunction
+from .objective_function_misfit import ObjectiveFunctionMisfit
 from .parameter import Parameter
 
 
@@ -127,7 +127,7 @@ class OptclimConfig:
     def objectiveFunction(self):
         """intantiate a ObjectiveFunction object from config object"""
         if self._objfun is None:
-            self._objfun = ObjectiveFunction(
+            self._objfun = ObjectiveFunctionMisfit(
                 self.basedir, self.optimise_parameters)
         return self._objfun
 

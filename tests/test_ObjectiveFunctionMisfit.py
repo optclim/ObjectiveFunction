@@ -1,7 +1,7 @@
 import pytest
 import numpy
 
-from OptClim2 import Parameter, ObjectiveFunction
+from OptClim2 import Parameter, ObjectiveFunctionMisfit
 from OptClim2 import OptClimPreliminaryRun, OptClimNewRun, OptClimWaiting
 from OptClim2 import LookupState
 
@@ -27,12 +27,12 @@ def rundir(tmpdir_factory):
 
 def test_objective_function_create(rundir, paramsA):
     # create a new objective function
-    ObjectiveFunction(rundir, paramsA)
+    ObjectiveFunctionMisfit(rundir, paramsA)
 
 
 def test_objective_function_read(rundir, paramsA):
     # read existing function
-    ObjectiveFunction(rundir, paramsA)
+    ObjectiveFunctionMisfit(rundir, paramsA)
 
 
 testdata = [
@@ -46,25 +46,25 @@ def test_objective_function_read_fail_wrong_values(rundir, paramsB, minv,
                                                    maxv, resolution):
     paramsB['c'] = Parameter(minv, maxv, resolution=resolution)
     with pytest.raises(RuntimeError):
-        ObjectiveFunction(rundir, paramsB)
+        ObjectiveFunctionMisfit(rundir, paramsB)
 
 
 def test_objective_function_read_fail_config(rundir, paramsB):
     # wrong number of parameters in config
     with pytest.raises(RuntimeError):
-        ObjectiveFunction(rundir, paramsB)
+        ObjectiveFunctionMisfit(rundir, paramsB)
 
 
 def test_objective_function_read_fail_db(rundir, paramsA):
     paramsA['d'] = Parameter(10, 20)
     # wrong number of parameters in db
     with pytest.raises(RuntimeError):
-        ObjectiveFunction(rundir, paramsA)
+        ObjectiveFunctionMisfit(rundir, paramsA)
 
 
 @pytest.fixture
 def objectiveA(rundir, paramsA):
-    return ObjectiveFunction(rundir, paramsA)
+    return ObjectiveFunctionMisfit(rundir, paramsA)
 
 
 def test_num_params(objectiveA):
