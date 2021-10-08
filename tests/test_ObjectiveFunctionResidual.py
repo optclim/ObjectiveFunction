@@ -20,7 +20,7 @@ def valuesA():
 
 @pytest.fixture(scope="session")
 def rundir(tmpdir_factory):
-    res = tmpdir_factory.mktemp("run1")
+    res = tmpdir_factory.mktemp("ofResidual")
     return res
 
 
