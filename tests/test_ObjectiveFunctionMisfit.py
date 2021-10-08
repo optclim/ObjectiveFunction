@@ -39,7 +39,7 @@ def objectiveA(rundir, paramsA):
     return ObjectiveFunctionMisfit(rundir, paramsA)
 
 
-def test_empty_loopup(objectiveA, valuesA):
+def test_empty_lookup(objectiveA, valuesA):
     # these should all fail because the param set is missing
     with pytest.raises(LookupError):
         objectiveA.state(valuesA)
