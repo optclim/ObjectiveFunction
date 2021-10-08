@@ -60,6 +60,7 @@ class ObjectiveFunction:
 
         self._parameters = parameters
         self._log = logging.getLogger(f'OptClim2.{self.__class__.__name__}')
+        self._basedir = basedir
 
         dbName = basedir / 'objective_function.sqlite'
 
@@ -136,6 +137,10 @@ class ObjectiveFunction:
 
         self._lb = None
         self._ub = None
+
+    @property
+    def basedir(self):
+        return self._basedir
 
     @property
     def con(self):
