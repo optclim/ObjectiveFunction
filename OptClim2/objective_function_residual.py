@@ -53,13 +53,14 @@ class ObjectiveFunctionResidual(ObjectiveFunction):
                 self._num_residuals = result.size
             return result
 
-    def _set_result(self, result):
+    def _set_result(self, pid, result):
         """convert result to value to be stored in lookup table
 
         :param result: result as computed by real objective function
+        :param pid: parameter set ID
         :return: value to be stored in lookup table"""
 
-        fname = self.basedir / 'residuals.npy'
+        fname = self.basedir / f'residuals_{pid}.npy'
         with open(fname, 'wb') as f:
             numpy.save(f, result)
 

@@ -343,10 +343,11 @@ class ObjectiveFunction:
 
         return self._getRparam(param)
 
-    def _set_result(self, result):
+    def _set_result(self, pid, result):
         """convert result to value to be stored in lookup table
 
         :param result: result as computed by real objective function
+        :param pid: parameter set ID
         :return: value to be stored in lookup table"""
         raise NotImplementedError
 
@@ -374,7 +375,7 @@ class ObjectiveFunction:
 
         cur.execute('update lookup set state = ?, result = ? where id = ?;',
                     (LookupState.COMPLETED.value,
-                     self._set_result(result), pid))
+                     self._set_result(pid, result), pid))
         self.con.commit()
 
 
