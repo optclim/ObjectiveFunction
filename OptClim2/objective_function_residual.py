@@ -35,7 +35,7 @@ class ObjectiveFunctionResidual(ObjectiveFunction):
         if self._num_residuals is None:
             return 50
         else:
-            return self._num_residual
+            return self._num_residuals
 
     def _get_result(self, result=None):
         """get result from information stored in lookup table
