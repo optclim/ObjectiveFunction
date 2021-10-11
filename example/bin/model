@@ -82,11 +82,16 @@ if __name__ == '__main__':
 
         # compute difference between observation and model
         data['diff'] = data['computed'] - data['z']
-        # and standard devation
-        std = data['diff'].std()
+
+        if cfg.objfunType == 'misfit':
+            # and standard devation
+            result = data['diff'].std()
+        elif cfg.objfunType == 'residual':
+            result = data['diff'].to_numpy()
 
         if args.delay>0:
             logging.info(f'waiting {args.delay} seconds')
             time.sleep(arg.delay)
-        logging.info(f'misfit {std}')
-        objfun.set_result(params, std)
+        logging.info(f'result {result}')
+
+        objfun.set_result(params, result)
