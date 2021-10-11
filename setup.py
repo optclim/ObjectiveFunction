@@ -38,6 +38,7 @@ setup(
     entry_points={
         'console_scripts': [
             'optclim2 = OptClim2.optimise:main',
+            'optclim2-dfols = OptClim2.dfols:main',
         ],
     },
     author=author,
