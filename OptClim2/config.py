@@ -8,6 +8,7 @@ from os.path import expandvars
 from io import StringIO
 
 from .objective_function_misfit import ObjectiveFunctionMisfit
+from .objective_function_residual import ObjectiveFunctionResidual
 from .parameter import Parameter
 
 
@@ -21,6 +22,7 @@ class OptclimConfig:
     defaultCfgStr = """
     [setup]
       basedir = string() # the base directory
+      objfun = string(default=misfit)
 
     [parameters]
       [[__many__]]
@@ -124,11 +126,23 @@ class OptclimConfig:
         return p
 
     @property
+    def objfunType(self):
+        """the objective function type"""
+        return self.cfg['setup']['objfun']
+
+    @property
     def objectiveFunction(self):
         """intantiate a ObjectiveFunction object from config object"""
         if self._objfun is None:
-            self._objfun = ObjectiveFunctionMisfit(
-                self.basedir, self.optimise_parameters)
+            if self.objfunType == 'misfit':
+                objfun = ObjectiveFunctionMisfit
+            elif self.objfunType == 'residual':
+                objfun = ObjectiveFunctionResidual
+            else:
+                msg = 'wrong type of objective function: ' + self.objfunType
+                self._log.error(msg)
+                raise RuntimeError(msg)
+            self._objfun = objfun(self.basedir, self.optimise_parameters)
         return self._objfun
 
 
