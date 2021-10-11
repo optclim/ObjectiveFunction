@@ -6,6 +6,7 @@ from typing import Mapping
 import sqlite3
 from pathlib import Path
 from enum import Enum
+import numpy
 
 from .parameter import Parameter
 
@@ -158,22 +159,22 @@ class ObjectiveFunction:
 
     @property
     def lower_bounds(self):
-        """a tuple containing the lower bounds"""
+        """an array containing the lower bounds"""
         if self._lb is None:
             self._lb = []
             for p in self._paramlist:
                 self._lb.append(self.parameters[p].minv)
-            self._lb = tuple(self._lb)
+            self._lb = numpy.array(self._lb)
         return self._lb
 
     @property
     def upper_bounds(self):
-        """a tuple containing the upper bounds"""
+        """an array containing the upper bounds"""
         if self._ub is None:
             self._ub = []
             for p in self._paramlist:
                 self._ub.append(self.parameters[p].maxv)
-            self._ub = tuple(self._ub)
+            self._ub = numpy.array(self._ub)
         return self._ub
 
     def values2params(self, values):
@@ -189,15 +190,15 @@ class ObjectiveFunction:
         return params
 
     def params2values(self, params):
-        """create a tuple of values from a dictionary of parameters
+        """create an array of values from a dictionary of parameters
 
         :param params: a dictionary of parameters
-        :return: a tuple of values
+        :return: a array of values
         """
         values = []
         for p in self._paramlist:
             values.append(params[p])
-        return tuple(values)
+        return numpy.array(values)
 
     def _getIparam(self, params):
         """convert dictionary of real valued parameters to scaled integer
@@ -277,6 +278,7 @@ class ObjectiveFunction:
         :rtype: float
         """
         iparam = self._getIparam(params)
+        self._log.debug('looking up params')
         cur = self.con.cursor()
         cur.execute(
             'select state, id, result from lookup where ' + self._select_str,

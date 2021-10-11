@@ -1,4 +1,5 @@
 import pytest
+import numpy
 
 from OptClim2 import Parameter
 from OptClim2 import LookupState
@@ -71,11 +72,13 @@ def test_num_params(objectiveA):
 
 
 def test_lower_bounds(objectiveA):
-    assert objectiveA.lower_bounds == (-1, 0, -5)
+    assert numpy.all(
+        objectiveA.lower_bounds == numpy.array((-1, 0, -5)))
 
 
 def test_upper_bounds(objectiveA):
-    assert objectiveA.upper_bounds == (1, 2, 0)
+    assert numpy.all(
+        objectiveA.upper_bounds == numpy.array((1, 2, 0)))
 
 
 def test_select_str(objectiveA):
@@ -104,8 +107,9 @@ def test_values2params_fail(objectiveA):
 
 
 def test_params2values(objectiveA):
-    assert objectiveA.params2values(
-        {'a': 0, 'b': 1, 'c': 2}) == (0, 1, 2)
+    assert numpy.all(
+        objectiveA.params2values(
+            {'a': 0, 'b': 1, 'c': 2}) == numpy.array((0, 1, 2)))
 
 
 def test_params2values_fail(objectiveA):
