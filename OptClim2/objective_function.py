@@ -7,6 +7,7 @@ import sqlite3
 from pathlib import Path
 from enum import Enum
 import numpy
+from abc import ABCMeta, abstractmethod
 
 from .parameter import Parameter
 
@@ -41,7 +42,7 @@ class LookupState(Enum):
     COMPLETED = 4
 
 
-class ObjectiveFunction:
+class ObjectiveFunction(metaclass=ABCMeta):
     """class maintaining a lookup table for an objective function
 
     :param basedir: the directory in which the lookup table is kept
@@ -260,23 +261,13 @@ class ObjectiveFunction:
                 'OptClim2 only supports derivative free optimisations')
         return self.get_result(self.values2params(x))
 
-    def _get_result(self, result=None):
-        """get result from information stored in lookup table
-
-        :param result: the result value stored in the lookup table or None
-                       when the result is not yet known
-        """
-        raise NotImplementedError
-
-    def get_result(self, params):
+    def _lookup_params(self, params):
         """look up parameters
 
         :param parms: dictionary containing parameter values
         :raises OptClimNewRun: when lookup fails
         :raises OptClimWaiting: when completed entries are required
-        :return: returns the value if lookup succeeds and state is completed
-                 return a random value otherwise
-        :rtype: float
+        :return: returns the value of the lookup
         """
         iparam = self._getIparam(params)
         self._log.debug('looking up params')
@@ -316,10 +307,22 @@ class ObjectiveFunction:
             raise OptClimNewRun
         elif state == LookupState.COMPLETED:
             self._log.debug('hit completed parameter set')
-            return self._get_result(r[2])
         else:
             self._log.debug('hit new/active parameter set')
-            return self._get_result(r[2])
+        return r[2]
+
+    @abstractmethod
+    def get_result(self, params):
+        """look up parameters
+
+        :param parms: dictionary containing parameter values
+        :raises OptClimNewRun: when lookup fails
+        :raises OptClimWaiting: when completed entries are required
+        :return: returns the value if lookup succeeds and state is completed
+                 return a random value otherwise
+        :rtype: float
+        """
+        pass
 
     def get_new(self):
         """get a set of parameters that are not yet processed
@@ -346,22 +349,11 @@ class ObjectiveFunction:
 
         return self._getRparam(param)
 
-    def _set_result(self, pid, result):
-        """convert result to value to be stored in lookup table
-
-        :param result: result as computed by real objective function
-        :param pid: parameter set ID
-        :return: value to be stored in lookup table"""
-        raise NotImplementedError
-
-    def set_result(self, params, result):
-        """set the result for a paricular parameter set
+    def _set_result_prepare(self, params):
+        """check state of lookup table and prepare for setting result
 
         :param parms: dictionary of parameters
-        :param result: result value to set
-        :type result: float
-        :raises LookupError: if entry for parameter set does not exist
-        :raises RuntimeError: if the parameter set is not in active state
+        :return: parameter set ID
         """
         iparam = self._getIparam(params)
         cur = self.con.cursor()
@@ -376,10 +368,11 @@ class ObjectiveFunction:
         if LookupState(state) != LookupState.ACTIVE:
             raise RuntimeError(f'parameter set is in wrong state {state}')
 
-        cur.execute('update lookup set state = ?, result = ? where id = ?;',
-                    (LookupState.COMPLETED.value,
-                     self._set_result(pid, result), pid))
-        self.con.commit()
+        return pid
+
+    @abstractmethod
+    def set_result(self, params, result):
+        pass
 
 
 if __name__ == '__main__':

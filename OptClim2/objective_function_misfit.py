@@ -2,7 +2,7 @@ __all__ = ['ObjectiveFunctionMisfit']
 
 import random
 
-from .objective_function import ObjectiveFunction
+from .objective_function import ObjectiveFunction, LookupState
 
 
 class ObjectiveFunctionMisfit(ObjectiveFunction):
@@ -18,23 +18,35 @@ class ObjectiveFunctionMisfit(ObjectiveFunction):
 
     RESULT_TYPE = "float"
 
-    def _get_result(self, result=None):
-        """get result from information stored in lookup table
+    def get_result(self, params):
+        """look up parameters
 
-        :param result: the result value stored in the lookup table or None
-                       when the result is not yet known
+        :param parms: dictionary containing parameter values
+        :raises OptClimNewRun: when lookup fails
+        :raises OptClimWaiting: when completed entries are required
+        :return: returns the value if lookup succeeds and state is completed
+                 return a random value otherwise
+        :rtype: float
         """
+        result = self._lookup_params(params)
 
         if result is None:
             return random.random()
         else:
             return result
 
-    def _set_result(self, pid, result):
-        """convert result to value to be stored in lookup table
+    def set_result(self, params, result):
+        """set the result for a paricular parameter set
 
-        :param result: result as computed by real objective function
-        :param pid: parameter set ID
-        :return: value to be stored in lookup table"""
+        :param parms: dictionary of parameters
+        :param result: result value to set
+        :type result: float
+        """
 
-        return float(result)
+        pid = self._set_result_prepare(params)
+
+        # update lookup table
+        cur = self.con.cursor()
+        cur.execute('update lookup set state = ?, result = ? where id = ?;',
+                    (LookupState.COMPLETED.value, float(result), pid))
+        self.con.commit()
