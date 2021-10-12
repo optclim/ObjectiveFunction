@@ -1,7 +1,9 @@
 The Objective Function
 ======================
 
-An objective function returns the misfit of the model with observations given a particular set of parameters. The :class:`OptClim2.ObjectiveFunction` object implements a generic objective function as a lookup table.
+An objective function compares a model with observations given a particular set of parameters. OptClim2 provides two generic objective functions that use a lookup table:
+ * The :class:`OptClim2.ObjectiveFunctionMisfit` class uses a single misfit value which is stored directly in the lookup table; and
+ * the :class:`OptClim2.ObjectiveFunctionResidual` class uses an array containing the residuals. This array is stored in an auxiliary file.
 
 The lookup table is queried using either the :meth:`OptClim2.ObjectiveFunction.get_result` which takes a dictionary of parameter values or by calling the :meth:`ObjectiveFunction instance <OptClim2.ObjectiveFunction.__call__>` with a tuple of parameter values. A lookup can have different results depending on the state of the entry in the lookup table.
 

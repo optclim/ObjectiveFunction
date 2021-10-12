@@ -1,5 +1,5 @@
 __all__ = ['OptClimPreliminaryRun', 'OptClimNewRun', 'OptClimWaiting',
-           'LookupState']
+           'LookupState', 'ObjectiveFunction']
 
 import logging
 from typing import Mapping
@@ -141,6 +141,7 @@ class ObjectiveFunction:
 
     @property
     def basedir(self):
+        """the basedirectory"""
         return self._basedir
 
     @property

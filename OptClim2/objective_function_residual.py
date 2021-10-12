@@ -12,7 +12,7 @@ from .objective_function import ObjectiveFunction
 class ObjectiveFunctionResidual(ObjectiveFunction):
     """class maintaining a lookup table for an objective function
 
-    store the name of a file condtaining the residuals
+    store the name of a file containing the residuals
 
     :param basedir: the directory in which the lookup table is kept
     :type basedir: Path
@@ -32,6 +32,7 @@ class ObjectiveFunctionResidual(ObjectiveFunction):
 
     @property
     def num_residuals(self):
+        """the number of residuals"""
         if self._num_residuals is None:
             return 50
         else:
