@@ -13,6 +13,7 @@ setup(
     include_package_data=True,
     install_requires=[
         'configobj',
+        'numpy>=1.21.0'
     ],
     cmdclass={'build_sphinx': BuildDoc},
     command_options={

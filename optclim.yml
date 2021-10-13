@@ -1,5 +1,6 @@
 name: optclim
 dependencies:
+  - python=3.8
   - cylc-flow
   - nlopt
   - configobj
@@ -8,6 +9,8 @@ dependencies:
   - pytest
   - sphinx<4.0
   - sphinx_rtd_theme
+  - mypy
+  - numpy>=1.21.0
 channels:
   - defaults
   - conda-forge
