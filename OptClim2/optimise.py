@@ -54,6 +54,8 @@ def main():
 
     cfg = NLOptClimConfig(args.config)
     opt = cfg.optimiser
+
+    # run optimiser twice to detect whether new parameter set is stable
     for i in range(2):
         # start with lower bounds
         try:

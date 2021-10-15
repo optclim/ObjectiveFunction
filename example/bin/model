@@ -1,4 +1,10 @@
 #!/bin/env python3
+
+# compute points on a quadratic surface with equan
+# f(x,y) = a*x^2 + b*y^2 + c*x*y + d*x + e*y + f
+# for some parameters a, b, c, d, e, f
+
+
 import OptClim2
 import argparse
 from pathlib import Path
@@ -48,14 +54,17 @@ if __name__ == '__main__':
         logging.info('generating synthetic data')
         # create a random parameter set
         params = {}
-        # generate a random value from parameter range
         for p in cfg.optimise_parameters:
+            # generate a uniformly distributed random value
+            # using the range of the parameter
             params[p] = random.uniform(cfg.optimise_parameters[p].minv,
                                        cfg.optimise_parameters[p].maxv)
+        # store generated parameters in file
         pname = cfg.basedir / 'parameters.data'
         with pname.open('w') as poutput:
             for p in params:
                 poutput.write(f'{p} {params[p]}\n')
+        # store synthetic data in file after adding some noise
         with dname.open('w') as output:
             for y in range(100):
                 y = y - 50
@@ -67,6 +76,7 @@ if __name__ == '__main__':
     else:
         logging.info('running model')
         objfun = cfg.objectiveFunction
+        # get parameter set without result from lookup table
         try:
             params = objfun.get_new()
         except Exception as e:
@@ -94,4 +104,5 @@ if __name__ == '__main__':
             time.sleep(arg.delay)
         logging.info(f'result {result}')
 
+        # store results for parameter set in lookup table
         objfun.set_result(params, result)
