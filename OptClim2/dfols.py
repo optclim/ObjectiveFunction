@@ -48,10 +48,10 @@ def main():
             continue
         except OptClimNewRun:
             print('new')
-            sys.exit(0)
+            sys.exit(1)
         except OptClimWaiting:
             print('waiting')
-            sys.exit(0)
+            sys.exit(2)
 
     log.info(f"optimum at {x}")
     print('done')

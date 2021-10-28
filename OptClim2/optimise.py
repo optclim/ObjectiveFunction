@@ -66,10 +66,10 @@ def main():
             continue
         except OptClimNewRun:
             print('new')
-            sys.exit(0)
+            sys.exit(1)
         except OptClimWaiting:
             print('waiting')
-            sys.exit(0)
+            sys.exit(2)
 
         minf = opt.last_optimum_value()
         results = opt.last_optimize_result()
