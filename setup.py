@@ -13,7 +13,9 @@ setup(
     include_package_data=True,
     install_requires=[
         'configobj',
-        'numpy>=1.21.0'
+        'numpy>=1.21.0',
+        'pandas',
+        'dfo-ls',
     ],
     cmdclass={'build_sphinx': BuildDoc},
     command_options={
@@ -40,6 +42,7 @@ setup(
         'console_scripts': [
             'optclim2 = OptClim2.optimise:main',
             'optclim2-dfols = OptClim2.dfols:main',
+            'optclim2-example-model = OptClim2.example:main',
         ],
     },
     author=author,

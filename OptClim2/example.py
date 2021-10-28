@@ -5,7 +5,7 @@
 # for some parameters a, b, c, d, e, f
 
 
-import OptClim2
+from .config import OptclimConfig
 import argparse
 from pathlib import Path
 import pandas
@@ -32,7 +32,7 @@ def model(x, y, params):
             params['f'])
 
 
-if __name__ == '__main__':
+def main():
     logging.basicConfig(level=logging.INFO)
     
     parser = argparse.ArgumentParser()
@@ -47,7 +47,7 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    cfg = OptClim2.OptclimConfig(args.config)
+    cfg = OptclimConfig(args.config)
 
     dname = cfg.basedir / 'synthetic.data'
     if args.generate:
@@ -106,3 +106,7 @@ if __name__ == '__main__':
 
         # store results for parameter set in lookup table
         objfun.set_result(params, result)
+
+
+if __name__ == '__main__':
+    main()
