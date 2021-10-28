@@ -14,10 +14,10 @@
         """
 [runtime]
   [[setup]]
-  script = model -g $CYLC_WORKFLOW_RUN_DIR/example.cfg
+  script = optclim2-example-model -g $CYLC_WORKFLOW_RUN_DIR/example.cfg
 
   [[forward]]
-  script = model $CYLC_WORKFLOW_RUN_DIR/example.cfg
+  script = optclim2-example-model $CYLC_WORKFLOW_RUN_DIR/example.cfg
 
   [[optimise]]
   script = """

@@ -1,6 +1,7 @@
 export CYLC_WORKFLOW_WORK_DIR=/tmp/test-dfols
 rm -rf $CYLC_WORKFLOW_WORK_DIR
-./example/bin/model example/example-dfols.cfg -g
+# generate synthetic data
+optclim2-example-model example/example-dfols.cfg -g
 
 while /bin/true
 do
@@ -12,7 +13,7 @@ do
     do
 	res=$(optclim2-dfols example/example-dfols.cfg | egrep '^(new|done|waiting)$')
     done
-    while ./example/bin/model example/example-dfols.cfg
+    while optclim2-example-model example/example-dfols.cfg
     do
 	echo 'fwd'
     done
