@@ -15,6 +15,7 @@ import logging
 import sys
 import random
 
+
 def model(x, y, params):
     """a 2D quadratic test model
 
@@ -34,11 +35,11 @@ def model(x, y, params):
 
 def main():
     logging.basicConfig(level=logging.INFO)
-    
+
     parser = argparse.ArgumentParser()
     parser.add_argument('config', type=Path,
                         help='name of configuration file')
-    parser.add_argument('-d','--delay', type=int, default=0, metavar='SEC',
+    parser.add_argument('-d', '--delay', type=int, default=0, metavar='SEC',
                         help='delay setting results by SEC seconds, default=0')
     parser.add_argument('-s', '--scale', type=float, default=10,
                         help="scale for random noise to add to synthetic data")
@@ -99,9 +100,9 @@ def main():
         elif cfg.objfunType == 'residual':
             result = data['diff'].to_numpy()
 
-        if args.delay>0:
+        if args.delay > 0:
             logging.info(f'waiting {args.delay} seconds')
-            time.sleep(arg.delay)
+            time.sleep(args.delay)
         logging.info(f'result {result}')
 
         # store results for parameter set in lookup table
