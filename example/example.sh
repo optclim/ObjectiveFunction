@@ -11,7 +11,7 @@ echo "using optimiser $OPTIMISER"
 optscript=optclim2-dfols
 optcfg=example-dfols.cfg
 if [ $OPTIMISER = 'nlopt' ]; then
-    optscript=optclim2
+    optscript=optclim2-nlopt
     optcfg=example-nlopt.cfg
 fi
 export CYLC_WORKFLOW_WORK_DIR=/tmp/test-$OPTIMISER

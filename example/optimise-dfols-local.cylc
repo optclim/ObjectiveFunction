@@ -20,12 +20,13 @@
   script = optclim2-example-model -g $CFG
 
   [[forward]]
-  script = optclim2-example-model $CFG
+  script = optclim2-example-model -d 10 $CFG
 
   [[optimise]]
   script = """
-  status=$(optimise $CFG)
+  status=$(optclim2-dfols $CFG || true)
   cylc message -- "${CYLC_SUITE_NAME}" "${CYLC_TASK_JOB}" $status
+
   """
      [[[outputs]]]
      wait = "waiting"
