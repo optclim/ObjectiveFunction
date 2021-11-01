@@ -1,0 +1,37 @@
+[scheduler]
+#    allow implicit tasks = True
+[scheduling]
+    cycling mode = integer
+    initial cycle point = 1
+    [[graph]]
+        R1 = """
+            setup
+        """
+        P1 = """
+             optimise:new => forward
+             optimise:wait => wait
+             forward[-P1]:started|wait[-P1] => optimise
+        """
+[runtime]
+  [[root]]
+     [[[environment]]]
+     CFG = $CYLC_WORKFLOW_RUN_DIR/example-dfols.cfg
+  [[setup]]
+  script = optclim2-example-model -g $CFG
+
+  [[forward]]
+  script = optclim2-example-model $CFG
+
+  [[optimise]]
+  script = """
+  status=$(optimise $CFG)
+  cylc message -- "${CYLC_SUITE_NAME}" "${CYLC_TASK_JOB}" $status
+  """
+     [[[outputs]]]
+     wait = "waiting"
+     new = "new"
+
+  [[wait]]
+  script = """
+  sleep 10
+  """

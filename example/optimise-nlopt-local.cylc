@@ -13,15 +13,18 @@
              forward[-P1]:started|wait[-P1] => optimise
         """
 [runtime]
+  [[root]]
+     [[[environment]]]
+     CFG = $CYLC_WORKFLOW_RUN_DIR/example-nlopt.cfg
   [[setup]]
-  script = optclim2-example-model -g $CYLC_WORKFLOW_RUN_DIR/example.cfg
+  script = optclim2-example-model -g $CFG
 
   [[forward]]
-  script = optclim2-example-model $CYLC_WORKFLOW_RUN_DIR/example.cfg
+  script = optclim2-example-model $CFG
 
   [[optimise]]
   script = """
-  status=$(optimise $CYLC_WORKFLOW_RUN_DIR/example.cfg)
+  status=$(optimise $CFG)
   cylc message -- "${CYLC_SUITE_NAME}" "${CYLC_TASK_JOB}" $status
   """
      [[[outputs]]]
