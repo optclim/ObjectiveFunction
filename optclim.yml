@@ -11,6 +11,9 @@ dependencies:
   - sphinx_rtd_theme
   - mypy
   - numpy>=1.21.0
+  - scipy
+  - pip:
+    - dfo-ls
 channels:
   - defaults
   - conda-forge
