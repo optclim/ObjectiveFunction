@@ -1,0 +1,50 @@
+[scheduler]
+#    allow implicit tasks = True
+[scheduling]
+    cycling mode = integer
+    initial cycle point = 1
+    [[graph]]
+        R1 = """
+            setup
+        """
+        P1 = """
+             optimise:new => forward
+             optimise:wait => wait
+             forward[-P1]:submit|wait[-P1] => optimise
+        """
+[runtime]
+  [[root]]
+  pre-script="""
+  export OMP_NUM_THREADS=1
+  export PATH=/exports/eddie/scratch/mhagdorn/optclim/bin/:$PATH
+  """
+     [[[environment]]]
+     CFG = $CYLC_WORKFLOW_RUN_DIR/example-dfols.cfg
+  [[setup]]
+  script = """
+  optclim2-example-model -g $CFG
+  """
+
+  [[forward]]
+  platform = eddie
+  script = optclim2-example-model -d 30 $CFG
+     [[[directives]]]
+       -l h_rt=00:05:00 
+       -l h_vmem=1G
+       -pe = sharedmem 1
+
+  [[optimise]]
+  script = """
+  status=$(optclim2-dfols $CFG || true)
+  cylc message -- "${CYLC_SUITE_NAME}" "${CYLC_TASK_JOB}" $status
+
+  """
+     [[[outputs]]]
+     wait = "waiting"
+     new = "new"
+
+  [[wait]]
+  script = """
+  sleep 60
+  """
+
