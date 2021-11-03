@@ -333,18 +333,16 @@ class ObjectiveFunction(metaclass=ABCMeta):
         :raises RuntimeError: if there is no new parameter set
         """
         cur = self.con.cursor()
-        cur.execute(
-            'select id,' + self._select_new_str + ' from lookup '
-            'where state = ?;', (LookupState.NEW.value, ))
+        cur.execute('update lookup set state = ? where id in '
+                    '(select id from lookup where state = ? limit 1)'
+                    ' returning ' + self._select_new_str,
+                    (LookupState.ACTIVE.value, LookupState.NEW.value))
+
         r = cur.fetchone()
         if r is None:
             raise RuntimeError('no new parameter sets')
 
-        param = self.values2params(r[1:])
-        pid = r[0]
-
-        cur.execute('update lookup set state = ? where id = ?;',
-                    (LookupState.ACTIVE.value, pid))
+        param = self.values2params(r)
         self.con.commit()
 
         return self._getRparam(param)
