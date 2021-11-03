@@ -22,6 +22,7 @@ done
 for opt in nlopt dfols; do
     flow=optimise-$opt-$platform.cylc
     if [ -f $flow ]; then
+        echo $flow
 	target=~/cylc-src/optclim-$opt-$platform
 	mkdir -p $target
 	cp $flow $target/flow.cylc
