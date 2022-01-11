@@ -25,6 +25,7 @@ def test_param_attribs(param):
     """check that we get expected attributes"""
     assert param.minv == -10
     assert param.maxv == 20
+    assert param.constant is False
 
 
 def test_scale_wrong_value(param):

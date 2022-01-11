@@ -24,6 +24,7 @@ def test_param_attribs(param):
     assert param.minv == -10
     assert param.maxv == 20
     assert param.resolution == 1
+    assert param.constant is False
 
 
 def test_transform_wrong_value(param):
