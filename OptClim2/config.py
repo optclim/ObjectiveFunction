@@ -9,7 +9,7 @@ from io import StringIO
 
 from .objective_function_misfit import ObjectiveFunctionMisfit
 from .objective_function_residual import ObjectiveFunctionResidual
-from .parameter import ParameterFloat
+from .parameter import ParameterFloat, ParameterInt
 
 
 class OptclimConfig:
@@ -25,13 +25,22 @@ class OptclimConfig:
       objfun = string(default=misfit)
 
     [parameters]
-      [[__many__]]
-        value = float() # the default value
-        min = float(default=None) # the minimum value allowed
-        max = float(default=None) # the maximum value allowed
-        resolution = float(default=1e-6) # the resolution of the parameter
-        constant = boolean(default=False) # if set to True the parameter is
-                                          # not optimised for
+      [[float_parameters]]
+        [[[__many__]]]
+          value = float() # the default value
+          min = float() # the minimum value allowed
+          max = float() # the maximum value allowed
+          resolution = float(default=1e-6) # the resolution of the parameter
+          constant = boolean(default=False) # if set to True the parameter is
+                                             # not optimised for
+      [[integer_parameters]]
+        [[[__many__]]]
+          value = integer() # the default value
+          min = integer() # the minimum value allowed
+          max = integer() # the maximum value allowed
+          constant = boolean(default=False) # if set to True the parameter is
+                                            # not optimised for
+
     """
 
     def __init__(self, fname: Path) -> None:
@@ -56,6 +65,7 @@ class OptclimConfig:
 
         self._params = None
         self._optimise_params = None
+        self._values = None
         self._objfun = None
 
         res = self._cfg.validate(validator, preserve_errors=True)
@@ -82,16 +92,23 @@ class OptclimConfig:
 
     def _get_params(self):
         self._params = {}
-        self._optimise_params = {}
+        self._values = {}
 
-        for p in self.cfg['parameters']:
-            self._params[p] = self.cfg['parameters'][p]['value']
-            if not self.cfg['parameters'][p]['constant']:
+        PARAMS = {'float_parameters': ParameterFloat,
+                  'integer_parameters': ParameterInt}
+
+        for t in PARAMS:
+            for p in self.cfg['parameters'][t]:
+                self._values[p] = self.cfg['parameters'][t][p]['value']
+                minv = self.cfg['parameters'][t][p]['min']
+                maxv = self.cfg['parameters'][t][p]['max']
+                extra = {}
+                extra['constant'] = self.cfg['parameters'][t][p]['constant']
+                if t == 'float':
+                    extra['resolution'] = \
+                        self.cfg['parameters'][t][p]['resolution']
                 try:
-                    self._optimise_params[p] = ParameterFloat(
-                        self.cfg['parameters'][p]['min'],
-                        self.cfg['parameters'][p]['max'],
-                        resolution=self.cfg['parameters'][p]['resolution'])
+                    self._params[p] = PARAMS[t](minv, maxv, **extra)
                 except Exception as e:
                     msg = f'problem with parameter {p}: {e}'
                     self._log.error(msg)
@@ -103,8 +120,15 @@ class OptclimConfig:
         return self._cfg
 
     @property
+    def values(self):
+        """a dictionary of the parameter values"""
+        if self._values is None:
+            self._get_params()
+        return self._values
+
+    @property
     def parameters(self):
-        """a dictionary of parameters and their values"""
+        """a dictionary of parameters"""
         if self._params is None:
             self._get_params()
         return self._params
@@ -113,7 +137,10 @@ class OptclimConfig:
     def optimise_parameters(self):
         """a dictionary of parameters that should be optimised"""
         if self._optimise_params is None:
-            self._get_params()
+            self._optimise_params = {}
+            for p in self.parameters:
+                if not self.parameters[p].constant:
+                    self._optimise_params[p] = self.parameters[p]
         return self._optimise_params
 
     @property
@@ -154,3 +181,4 @@ if __name__ == '__main__':
 
     pprint(cfg.parameters)
     pprint(cfg.optimise_parameters)
+    pprint(cfg.values)

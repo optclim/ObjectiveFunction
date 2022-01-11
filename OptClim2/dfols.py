@@ -37,7 +37,7 @@ def main():
         try:
             x = solve(
                 lambda x: cfg.objectiveFunction(x, numpy.array([])),
-                cfg.objectiveFunction.params2values(cfg.parameters),
+                cfg.objectiveFunction.params2values(cfg.values),
                 bounds=(
                     cfg.objectiveFunction.lower_bounds,
                     cfg.objectiveFunction.upper_bounds),

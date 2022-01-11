@@ -60,7 +60,7 @@ def main():
         # start with lower bounds
         try:
             x = opt.optimize(
-                cfg.objectiveFunction.params2values(cfg.parameters))
+                cfg.objectiveFunction.params2values(cfg.values))
         except OptClimPreliminaryRun:
             log.info('new parameter set')
             continue
