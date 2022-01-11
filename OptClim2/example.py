@@ -25,12 +25,12 @@ def model(x, y, params):
     :type params: dict
     :return: the z value
     """
-    return (params['a'] * x * x +  # noqa: W504
-            params['b'] * y * y +  # noqa: W504
-            params['c'] * x * y +  # noqa: W504
-            params['d'] * x +      # noqa: W504
-            params['e'] * y +      # noqa: W504
-            params['f'])
+    return params['a'] * x * x \
+        + params['b'] * y * y \
+        + params['c'] * x * y \
+        + params['d'] * x \
+        + params['e'] * y \
+        + params['f']
 
 
 def main():
@@ -58,8 +58,9 @@ def main():
         for p in cfg.optimise_parameters:
             # generate a uniformly distributed random value
             # using the range of the parameter
-            params[p] = random.uniform(cfg.optimise_parameters[p].minv,
-                                       cfg.optimise_parameters[p].maxv)
+            params[p] = cfg.optimise_parameters[p](
+                random.uniform(cfg.optimise_parameters[p].minv,
+                               cfg.optimise_parameters[p].maxv))
         # store generated parameters in file
         pname = cfg.basedir / 'parameters.data'
         with pname.open('w') as poutput:
