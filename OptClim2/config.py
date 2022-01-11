@@ -9,7 +9,7 @@ from io import StringIO
 
 from .objective_function_misfit import ObjectiveFunctionMisfit
 from .objective_function_residual import ObjectiveFunctionResidual
-from .parameter import Parameter
+from .parameter import ParameterFloat
 
 
 class OptclimConfig:
@@ -88,7 +88,7 @@ class OptclimConfig:
             self._params[p] = self.cfg['parameters'][p]['value']
             if not self.cfg['parameters'][p]['constant']:
                 try:
-                    self._optimise_params[p] = Parameter(
+                    self._optimise_params[p] = ParameterFloat(
                         self.cfg['parameters'][p]['min'],
                         self.cfg['parameters'][p]['max'],
                         resolution=self.cfg['parameters'][p]['resolution'])

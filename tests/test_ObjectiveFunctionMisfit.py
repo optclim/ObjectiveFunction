@@ -2,7 +2,7 @@ import pytest
 import numpy
 
 from OptClim2 import ObjectiveFunctionMisfit
-from OptClim2 import Parameter
+from OptClim2 import ParameterFloat
 from OptClim2 import LookupState
 from OptClim2 import OptClimPreliminaryRun, OptClimNewRun, OptClimWaiting
 
@@ -54,7 +54,7 @@ class TestObjectiveFunctionMisfit:
                                  (-5, 0, 1e-7)])
     def test_objective_function_read_fail_wrong_values(
             self, objfun, objectiveA, paramsB, minv, maxv, resolution):
-        paramsB['c'] = Parameter(minv, maxv, resolution=resolution)
+        paramsB['c'] = ParameterFloat(minv, maxv, resolution=resolution)
         o = objectiveA
         with pytest.raises(RuntimeError):
             objfun(o.basedir, paramsB)
@@ -69,7 +69,7 @@ class TestObjectiveFunctionMisfit:
     def test_objective_function_read_fail_db(
             self, objfun, objectiveA, paramsA):
         o = objectiveA
-        paramsA['d'] = Parameter(10, 20)
+        paramsA['d'] = ParameterFloat(10, 20)
         # wrong number of parameters in db
         with pytest.raises(RuntimeError):
             objfun(o.basedir, paramsA)

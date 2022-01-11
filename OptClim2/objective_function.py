@@ -211,7 +211,7 @@ class ObjectiveFunction(metaclass=ABCMeta):
         for p in params:
             if p not in self.parameters:
                 raise RuntimeError(f'parameter {p} not found')
-            iparam[p] = self.parameters[p].value2int(params[p])
+            iparam[p] = self.parameters[p].transform(params[p])
         return iparam
 
     def _getRparam(self, params):
@@ -223,7 +223,7 @@ class ObjectiveFunction(metaclass=ABCMeta):
         for p in params:
             if p not in self.parameters:
                 raise RuntimeError(f'parameter {p} not found')
-            rparam[p] = self.parameters[p].int2value(params[p])
+            rparam[p] = self.parameters[p].inv_transform(params[p])
         return rparam
 
     def state(self, params):
@@ -371,11 +371,3 @@ class ObjectiveFunction(metaclass=ABCMeta):
     @abstractmethod
     def set_result(self, params, result):
         pass
-
-
-if __name__ == '__main__':
-    logging.basicConfig(level=logging.DEBUG)
-    params = {'a': Parameter(1, 2), 'b': Parameter(-1, 1)}
-    objFun = ObjectiveFunction(Path('/tmp'), params)
-
-    print(objFun({'a': 1, 'b': 0}))

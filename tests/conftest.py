@@ -1,19 +1,19 @@
 import pytest
 
-from OptClim2 import Parameter
+from OptClim2 import ParameterFloat
 
 
 @pytest.fixture
 def paramsA():
-    return {'a': Parameter(-1, 1),
-            'b': Parameter(0, 2, 1e-7),
-            'c': Parameter(-5, 0)}
+    return {'a': ParameterFloat(-1, 1),
+            'b': ParameterFloat(0, 2, 1e-7),
+            'c': ParameterFloat(-5, 0)}
 
 
 @pytest.fixture
 def paramsB():
-    return {'a': Parameter(-1, 1),
-            'b': Parameter(0, 2, 1e-7)}
+    return {'a': ParameterFloat(-1, 1),
+            'b': ParameterFloat(0, 2, 1e-7)}
 
 
 @pytest.fixture
