@@ -51,7 +51,7 @@ class ObjectiveFunction(metaclass=ABCMeta):
         permissible parameter values
     """
 
-    RESULT_TYPE = None
+    RESULT_TYPE = ""
 
     def __init__(self, basedir: Path,                   # noqa: C901
                  parameters: Mapping[str, Parameter]):
@@ -99,7 +99,7 @@ class ObjectiveFunction(metaclass=ABCMeta):
                             (p, parameters[p].minv, parameters[p].maxv,
                              parameters[p].resolution))
             cols.append("state integer")
-            if self.RESULT_TYPE is not None:
+            if len(self.RESULT_TYPE) > 0:
                 cols.append(f"result {self.RESULT_TYPE}")
             cur.execute(
                 "create table if not exists lookup ("
