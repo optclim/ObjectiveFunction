@@ -81,7 +81,8 @@ class ParameterInt(Parameter[int]):
         super().__init__(minv, maxv, constant=constant)
 
     def __repr__(self):
-        return f'ParameterInt({self.minv}, {self.maxv}'
+        return f'ParameterInt({self.minv}, {self.maxv}, ' \
+            f'constant={self.constant})'
 
     def transform(self, value: int) -> int:
         self.check_value(value)
@@ -122,7 +123,8 @@ class ParameterFloat(Parameter[float]):
 
     def __repr__(self):
         return f'ParameterFloat({self.minv}, {self.maxv}, ' \
-            f'resolution={self.resolution})'
+            f'resolution={self.resolution}, ' \
+            f'constant={self.constant})'
 
     def check_value(self, value: float) -> None:
         if value < self.minv - 0.99 * self.resolution \
