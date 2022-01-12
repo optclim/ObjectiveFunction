@@ -1,45 +1,15 @@
-__all__ = ['OptClimPreliminaryRun', 'OptClimNewRun', 'OptClimWaiting',
-           'LookupState', 'ObjectiveFunction']
+__all__ = ['ObjectiveFunction']
 
 import logging
 from typing import Mapping
 import sqlite3
 from pathlib import Path
-from enum import Enum
 import numpy
 from abc import ABCMeta, abstractmethod
 
 from .parameter import Parameter
-
-
-class OptClimPreliminaryRun(Exception):
-    """Exception used when a preliminary entry in the lookup
-    table was created"""
-    pass
-
-
-class OptClimNewRun(Exception):
-    """Exception used when a new entry in the lookup table was created"""
-    pass
-
-
-class OptClimWaiting(Exception):
-    """Exception used to indicate that entries need to be completed"""
-    pass
-
-
-class LookupState(Enum):
-    """the state of the parameter set
-
-     * PROVISIONAL: new entry under consideration
-     * NEW: new parameter set
-     * ACTIVE: parameter set being computed
-     * COMPLETED: completed parameter set
-    """
-    PROVISIONAL = 1
-    NEW = 2
-    ACTIVE = 3
-    COMPLETED = 4
+from .common import OptClimPreliminaryRun, OptClimNewRun, OptClimWaiting
+from .common import LookupState
 
 
 class ObjectiveFunction(metaclass=ABCMeta):

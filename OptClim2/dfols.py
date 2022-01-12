@@ -6,8 +6,7 @@ from dfols import solve
 import numpy
 
 from .config import OptclimConfig
-from .objective_function import OptClimPreliminaryRun, OptClimNewRun
-from .objective_function import OptClimWaiting
+from .common import OptClimPreliminaryRun, OptClimNewRun, OptClimWaiting
 
 
 class DFOLSOptClimConfig(OptclimConfig):

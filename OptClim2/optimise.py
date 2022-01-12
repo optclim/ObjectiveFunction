@@ -5,8 +5,7 @@ import sys
 import logging
 
 from .config import OptclimConfig
-from .objective_function import OptClimPreliminaryRun, OptClimNewRun
-from .objective_function import OptClimWaiting
+from .common import OptClimPreliminaryRun, OptClimNewRun, OptClimWaiting
 
 # In case we are using a stochastic method, use a "deterministic"
 # sequence of pseudorandom numbers, to be repeatable:
