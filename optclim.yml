@@ -12,6 +12,7 @@ dependencies:
   - mypy
   - numpy>=1.21.0
   - scipy
+  - sqlalchemy
   - pip:
     - dfo-ls
 channels:
