@@ -1,3 +1,5 @@
+__all__ = ['Base', 'DBStudy', 'DBParameterInt', 'DBParameterFloat', 'getDBParameter']
+
 from sqlalchemy.orm import declarative_base, relationship
 from sqlalchemy import Column, Integer, String, Float, Enum
 from sqlalchemy import ForeignKey, UniqueConstraint
@@ -8,18 +10,18 @@ from .common import LookupState
 Base = declarative_base()
 
 
-class DBRun(Base):
-    __tablename__ = 'runs'
+class DBStudy(Base):
+    __tablename__ = 'studies'
 
     id = Column(Integer, primary_key=True)
     name = Column(String, unique=True)
 
     parameters = relationship("DBParameter", order_by="DBParameter.name",
-                              back_populates="run")
-    lookup = relationship("DBLookup", back_populates="run")
+                              back_populates="study")
+    lookup = relationship("DBLookup", back_populates="study")
 
     def __repr__(self):
-        return f"<DBRun(name={self.name})>"
+        return f"<DBStudy(name={self.name})>"
 
 
 class DBParameter(Base):
@@ -27,13 +29,13 @@ class DBParameter(Base):
 
     id = Column(Integer, primary_key=True)
     name = Column(String)
-    run_id = Column(Integer, ForeignKey('runs.id'))
+    study_id = Column(Integer, ForeignKey('studies.id'))
     type = Column(String)
 
-    run = relationship("DBRun", back_populates="parameters")
+    study = relationship("DBStudy", back_populates="parameters")
 
     __table_args__ = (
-        UniqueConstraint('name', 'run_id', name='_unique_params'), )
+        UniqueConstraint('name', 'study_id', name='_unique_params'), )
 
     __mapper_args__ = {
         'polymorphic_identity': 'parameter',
@@ -62,9 +64,9 @@ class DBParameterInt(DBParameter):
         return ParameterInt(minv=self.minv, maxv=self.maxv)
 
     @classmethod
-    def from_param(cls, run, name, parameter):
+    def from_param(cls, study, name, parameter):
         return cls(name=name, minv=parameter.minv, maxv=parameter.maxv,
-                   run=run)
+                   study=study)
 
 
 class DBParameterFloat(DBParameter):
@@ -88,16 +90,16 @@ class DBParameterFloat(DBParameter):
                               resolution=self.resolution)
 
     @classmethod
-    def from_param(cls, run, name, parameter):
+    def from_param(cls, study, name, parameter):
         return cls(name=name, minv=parameter.minv, maxv=parameter.maxv,
-                   resolution=parameter.resolution, run=run)
+                   resolution=parameter.resolution, study=study)
 
 
-def getDBParameter(run, name, parameter):
+def getDBParameter(study, name, parameter):
     if isinstance(parameter, ParameterInt):
-        return DBParameterInt.from_param(run, name, parameter)
+        return DBParameterInt.from_param(study, name, parameter)
     elif isinstance(parameter, ParameterFloat):
-        return DBParameterFloat.from_param(run, name, parameter)
+        return DBParameterFloat.from_param(study, name, parameter)
     else:
         raise TypeError('wrong type for argument parameter')
 
@@ -106,20 +108,20 @@ class DBLookup(Base):
     __tablename__ = 'lookup'
 
     id = Column(Integer, primary_key=True)
-    run_id = Column(Integer, ForeignKey('runs.id'))
+    study_id = Column(Integer, ForeignKey('studies.id'))
     state = Column(Enum(LookupState))
     type = Column(String)
 
     _vlist = relationship("DBLookupParameters", back_populates="_lookup")
-    run = relationship("DBRun", back_populates="lookup")
+    study = relationship("DBStudy", back_populates="lookup")
 
     __mapper_args__ = {
         'polymorphic_identity': 'lookup',
         'polymorphic_on': type}
 
-    def __init__(self, run, parameters):
-        self.run = run
-        for db_param in self.run.parameters:
+    def __init__(self, study, parameters):
+        self.study = study
+        for db_param in self.study.parameters:
             DBLookupParameters(
                 _lookup=self, parameter=db_param,
                 value=db_param.param.transform(parameters[db_param.name]))
@@ -181,13 +183,13 @@ if __name__ == '__main__':
 
     session = Session()
 
-    run = DBRun(name='test')
-    session.add(run)
+    study = DBStudy(name='test')
+    session.add(study)
 
-    paramC = getDBParameter(run, 'C', ParameterInt(-20, -10))
+    paramC = getDBParameter(study, 'C', ParameterInt(-20, -10))
     paramA = DBParameterFloat(name="A", minv=0., maxv=10.,
-                              resolution=1e-6, run=run)
-    paramB = DBParameterInt(name="B", minv=-10, maxv=20, run=run)
+                              resolution=1e-6, study=study)
+    paramB = DBParameterInt(name="B", minv=-10, maxv=20, study=study)
     session.add(paramA)
     session.add(paramB)
     session.add(paramC)
@@ -196,9 +198,9 @@ if __name__ == '__main__':
               'B': 10,
               'C': -10}
 
-    lookup = DBLookup(run, values)
+    lookup = DBLookup(study, values)
     print(lookup.values)
 
     session.commit()
 
-    print(run.parameters)
+    print(study.parameters)
