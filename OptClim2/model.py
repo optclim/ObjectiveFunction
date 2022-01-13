@@ -1,4 +1,5 @@
-__all__ = ['Base', 'DBStudy', 'DBParameterInt', 'DBParameterFloat', 'getDBParameter']
+__all__ = ['Base', 'DBStudy', 'DBParameterInt', 'DBParameterFloat',
+           'getDBParameter', 'DBSimulation']
 
 from sqlalchemy.orm import declarative_base, relationship
 from sqlalchemy import Column, Integer, String, Float, Enum
@@ -18,7 +19,7 @@ class DBStudy(Base):
 
     parameters = relationship("DBParameter", order_by="DBParameter.name",
                               back_populates="study")
-    lookup = relationship("DBLookup", back_populates="study")
+    simulations = relationship("DBSimulation", back_populates="study")
 
     def __repr__(self):
         return f"<DBStudy(name={self.name})>"
@@ -104,24 +105,35 @@ def getDBParameter(study, name, parameter):
         raise TypeError('wrong type for argument parameter')
 
 
+class DBSimulation(Base):
+    __tablename__ = 'simulations'
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String)
+    study_id = Column(Integer, ForeignKey('studies.id'))
+
+    study = relationship("DBStudy", back_populates="simulations")
+    lookup = relationship("DBLookup", back_populates="simulation")
+
+
 class DBLookup(Base):
     __tablename__ = 'lookup'
 
     id = Column(Integer, primary_key=True)
-    study_id = Column(Integer, ForeignKey('studies.id'))
+    simulation_id = Column(Integer, ForeignKey('simulations.id'))
     state = Column(Enum(LookupState))
     type = Column(String)
 
     _vlist = relationship("DBLookupParameters", back_populates="_lookup")
-    study = relationship("DBStudy", back_populates="lookup")
+    simulation = relationship("DBSimulation", back_populates="lookup")
 
     __mapper_args__ = {
         'polymorphic_identity': 'lookup',
         'polymorphic_on': type}
 
-    def __init__(self, study, parameters):
-        self.study = study
-        for db_param in self.study.parameters:
+    def __init__(self, simulation, parameters):
+        self.simulation = simulation
+        for db_param in self.simulation.study.parameters:
             DBLookupParameters(
                 _lookup=self, parameter=db_param,
                 value=db_param.param.transform(parameters[db_param.name]))
@@ -194,11 +206,13 @@ if __name__ == '__main__':
     session.add(paramB)
     session.add(paramC)
 
+    sim = DBSimulation(name="test_sim", study=study)
+
     values = {'A': 5,
               'B': 10,
               'C': -10}
 
-    lookup = DBLookup(study, values)
+    lookup = DBLookup(sim, values)
     print(lookup.values)
 
     session.commit()
