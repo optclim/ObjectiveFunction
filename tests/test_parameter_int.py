@@ -40,3 +40,8 @@ def test_scale_wrong_value(param):
 def test_param_transform(param, value):
     assert param.transform(value) == value
     assert param.inv_transform(value) == value
+
+
+def test_eq(paramSet):
+    for p in paramSet:
+        assert (paramSet['ai'] == paramSet[p]) is ('ai' == p)

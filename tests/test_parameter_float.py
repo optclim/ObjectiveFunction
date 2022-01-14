@@ -73,3 +73,8 @@ testdata2 = [
 def test_transform2(param2, value, transformed, rounded):
     assert param2.transform(value) == transformed
     assert abs(param2.inv_transform(transformed) - rounded) < 1e-10
+
+
+def test_eq(paramSet):
+    for p in paramSet:
+        assert (paramSet['af'] == paramSet[p]) is ('af' == p)

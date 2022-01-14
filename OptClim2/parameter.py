@@ -46,6 +46,10 @@ class Parameter(ABC, Generic[T]):
                              f'[{self.minv}, {self.maxv}]')
 
     @abstractmethod
+    def __eq__(self, other: T) -> bool:
+        pass
+
+    @abstractmethod
     def transform(self, value: T) -> int:
         """transform the value to the internal storage format"""
         pass
@@ -83,6 +87,15 @@ class ParameterInt(Parameter[int]):
     def __repr__(self):
         return f'ParameterInt({self.minv}, {self.maxv}, ' \
             f'constant={self.constant})'
+
+    def __eq__(self, other) -> bool:
+        if not isinstance(other, ParameterInt):
+            return False
+        if other.minv != self.minv:
+            return False
+        if other.maxv != self.maxv:
+            return False
+        return True
 
     def transform(self, value: int) -> int:
         self.check_value(value)
@@ -131,6 +144,17 @@ class ParameterFloat(Parameter[float]):
            or value > self.maxv + 0.99 * self.resolution:
             raise ValueError(
                 f'value {value} outside bounds [{self.minv}, {self.maxv}]')
+
+    def __eq__(self, other) -> bool:
+        if not isinstance(other, ParameterFloat):
+            return False
+        if abs(other.resolution - self.resolution) > 1e-12:
+            return False
+        if abs(other.minv - self.minv) > 1e-12:
+            return False
+        if abs(other.maxv - self.maxv) > 1e-12:
+            return False
+        return True
 
     def transform(self, value: float) -> int:
         self.check_value(value)
