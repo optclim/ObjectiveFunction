@@ -115,6 +115,9 @@ class DBSimulation(Base):
     study = relationship("DBStudy", back_populates="simulations")
     lookup = relationship("DBLookup", back_populates="simulation")
 
+    __table_args__ = (UniqueConstraint('name', 'study_id',
+                                       name='_unique_simulation'))
+
 
 class DBLookup(Base):
     __tablename__ = 'lookup'
