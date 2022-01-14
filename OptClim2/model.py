@@ -113,32 +113,32 @@ class DBSimulation(Base):
     study_id = Column(Integer, ForeignKey('studies.id'))
 
     study = relationship("DBStudy", back_populates="simulations")
-    lookup = relationship("DBLookup", back_populates="simulation")
+    runs = relationship("DBRun", back_populates="simulation")
 
     __table_args__ = (UniqueConstraint('name', 'study_id',
                                        name='_unique_simulation'), )
 
 
-class DBLookup(Base):
-    __tablename__ = 'lookup'
+class DBRun(Base):
+    __tablename__ = 'runs'
 
     id = Column(Integer, primary_key=True)
     simulation_id = Column(Integer, ForeignKey('simulations.id'))
     state = Column(Enum(LookupState))
     type = Column(String)
 
-    _vlist = relationship("DBLookupParameters", back_populates="_lookup")
-    simulation = relationship("DBSimulation", back_populates="lookup")
+    _vlist = relationship("DBRunParameters", back_populates="_run")
+    simulation = relationship("DBSimulation", back_populates="runs")
 
     __mapper_args__ = {
-        'polymorphic_identity': 'lookup',
+        'polymorphic_identity': 'run',
         'polymorphic_on': type}
 
     def __init__(self, simulation, parameters):
         self.simulation = simulation
         for db_param in self.simulation.study.parameters:
-            DBLookupParameters(
-                _lookup=self, parameter=db_param,
+            DBRunParameters(
+                _run=self, parameter=db_param,
                 value=db_param.param.transform(parameters[db_param.name]))
 
     @property
@@ -150,35 +150,35 @@ class DBLookup(Base):
         return values
 
 
-class DBLookupMisfit(DBLookup):
-    __tablename__ = 'lookup_misfit'
+class DBRunMisfit(DBRun):
+    __tablename__ = 'runs_misfit'
 
-    id = Column(Integer, ForeignKey('lookup.id'), primary_key=True)
+    id = Column(Integer, ForeignKey('runs.id'), primary_key=True)
     misfit = Column(Float)
 
     __mapper_args__ = {
         'polymorphic_identity': 'residual'}
 
 
-class DBLookupPath(DBLookup):
-    __tablename__ = 'lookup_path'
+class DBRunPath(DBRun):
+    __tablename__ = 'runs_path'
 
-    id = Column(Integer, ForeignKey('lookup.id'), primary_key=True)
+    id = Column(Integer, ForeignKey('runs.id'), primary_key=True)
     path = Column(String)
 
     __mapper_args__ = {
         'polymorphic_identity': 'path'}
 
 
-class DBLookupParameters(Base):
-    __tablename__ = 'lookup_parameters'
+class DBRunParameters(Base):
+    __tablename__ = 'run_parameters'
 
     id = Column(Integer, primary_key=True)
-    lid = Column(Integer, ForeignKey('lookup.id'))
+    lid = Column(Integer, ForeignKey('runs.id'))
     pid = Column(Integer, ForeignKey('parameters.id'))
     value = Column(Integer)
 
-    _lookup = relationship(DBLookup, back_populates="_vlist")
+    _run = relationship(DBRun, back_populates="_vlist")
     parameter = relationship("DBParameter")
 
     @property
@@ -215,8 +215,8 @@ if __name__ == '__main__':
               'B': 10,
               'C': -10}
 
-    lookup = DBLookup(sim, values)
-    print(lookup.values)
+    run = DBRun(sim, values)
+    print(run.values)
 
     session.commit()
 
