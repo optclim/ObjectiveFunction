@@ -127,7 +127,8 @@ class DBRun(Base):
     state = Column(Enum(LookupState))
     type = Column(String)
 
-    _vlist = relationship("DBRunParameters", back_populates="_run")
+    values = relationship("DBRunParameters", back_populates="_run",
+                          cascade="all, delete-orphan")
     simulation = relationship("DBSimulation", back_populates="runs")
 
     __mapper_args__ = {
@@ -142,9 +143,9 @@ class DBRun(Base):
                 value=db_param.param.transform(parameters[db_param.name]))
 
     @property
-    def values(self):
+    def parameters(self):
         values = {}
-        for v in self._vlist:
+        for v in self.values:
             p = v.parameter
             values[p.name] = p.param.inv_transform(v.value)
         return values
@@ -178,7 +179,7 @@ class DBRunParameters(Base):
     pid = Column(Integer, ForeignKey('parameters.id'))
     value = Column(Integer)
 
-    _run = relationship(DBRun, back_populates="_vlist")
+    _run = relationship(DBRun, back_populates="values")
     parameter = relationship("DBParameter")
 
     @property
@@ -216,7 +217,8 @@ if __name__ == '__main__':
               'C': -10}
 
     run = DBRun(sim, values)
-    print(run.values)
+    print('v', run.values)
+    print('p', run.parameters)
 
     session.commit()
 
