@@ -31,9 +31,9 @@ class ObjectiveFunction:
 
     _Run = DBRun
 
-    def __init__(self, study: str, basedir: Path,
+    def __init__(self, study: str, basedir: Path,  # noqa C901
                  parameters: Mapping[str, Parameter],
-                 simulation=None):
+                 simulation=None, db=None):
         """constructor"""
 
         if len(parameters) == 0:
@@ -44,9 +44,12 @@ class ObjectiveFunction:
         self._basedir = basedir
         self._session = None
 
-        dbName = basedir / 'objective_function.sqlite'
+        if db is None:
+            dbName = 'sqlite:///' + str(basedir / 'objective_function.sqlite')
+        else:
+            dbName = db
 
-        self._session = _sessionmaker('sqlite:///' + str(dbName))
+        self._session = _sessionmaker(dbName)
 
         # get the study
         self._study = self._session.query(DBStudy).filter_by(
@@ -95,6 +98,10 @@ class ObjectiveFunction:
         return self._session
 
     @property
+    def study(self):
+        return str(self._study.name)
+
+    @property
     def num_params(self):
         """the number of parameters"""
         return len(self._parameters)
@@ -104,7 +111,12 @@ class ObjectiveFunction:
         """dictionary of parameters"""
         return self._parameters
 
-    def _select_simulation(self, name):
+    @property
+    def simulations(self):
+        sims = [s.name for s in self._study.simulations]
+        return sims
+
+    def _select_simulation(self, name, create=True):
         """select a simulation
 
         :param name: name of simulation
@@ -114,9 +126,13 @@ class ObjectiveFunction:
         simulation = self._session.query(DBSimulation).filter_by(
             name=name, study=self._study).one_or_none()
         if simulation is None:
-            self._log.debug(f'create simulation {name}')
-            simulation = DBSimulation(name=name, study=self._study)
-            self.session.commit()
+            if create:
+                self._log.debug(f'create simulation {name}')
+                simulation = DBSimulation(name=name, study=self._study)
+                self.session.commit()
+            else:
+                raise LookupError(
+                    f'study {self.study} has no simulation {name}')
         return simulation
 
     def setDefaultSimulation(self, name):
@@ -127,9 +143,9 @@ class ObjectiveFunction:
         """
         self._simulation = self._select_simulation(name)
 
-    def getSimulation(self, simulation=None):
+    def getSimulation(self, simulation=None, create=True):
         if simulation is not None:
-            sim = self._select_simulation(simulation)
+            sim = self._select_simulation(simulation, create=create)
         else:
             sim = self._simulation
         if sim is None:
@@ -137,7 +153,7 @@ class ObjectiveFunction:
         return sim
 
     def _getRun(self, parameters, simulation=None):
-        sim = self.getSimulation(simulation)
+        sim = self.getSimulation(simulation, create=False)
 
         dbParams = {}
         dbParams['runid'] = []
