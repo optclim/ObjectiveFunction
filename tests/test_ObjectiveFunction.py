@@ -1,7 +1,7 @@
 import pytest
 import numpy
 
-from OptClim2.objective_function_new import ObjectiveFunction
+from OptClim2 import ObjectiveFunction
 from OptClim2 import ParameterFloat
 
 

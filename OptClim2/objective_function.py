@@ -2,113 +2,110 @@ __all__ = ['ObjectiveFunction']
 
 import logging
 from typing import Mapping
-import sqlite3
 from pathlib import Path
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 import numpy
+import pandas
 from abc import ABCMeta, abstractmethod
 
 from .parameter import Parameter
+from .model import Base, DBStudy, getDBParameter, DBSimulation, DBRun
 from .common import OptClimPreliminaryRun, OptClimNewRun, OptClimWaiting
 from .common import LookupState
+
+
+class SessionMaker:
+    _sessions = {}
+
+    def __call__(self, connstr):
+        if connstr not in self._sessions:
+            engine = create_engine(connstr)
+            Base.metadata.create_all(engine)
+            self._sessions[connstr] = sessionmaker(bind=engine)
+        return self._sessions[connstr]()
+
+
+_sessionmaker = SessionMaker()
 
 
 class ObjectiveFunction(metaclass=ABCMeta):
     """class maintaining a lookup table for an objective function
 
+    :param study: the name of the study
+    :type study: str
     :param basedir: the directory in which the lookup table is kept
     :type basedir: Path
     :param parameters: a dictionary mapping parameter names to the range of
         permissible parameter values
+    :param simulation: name of the default simulation
+    :type simulation: str
+    :param db: database connection string
+    :type db: str
     """
 
-    RESULT_TYPE = ""
+    _Run = DBRun
 
-    def __init__(self, basedir: Path,                   # noqa: C901
-                 parameters: Mapping[str, Parameter]):
+    def __init__(self, study: str, basedir: Path,  # noqa C901
+                 parameters: Mapping[str, Parameter],
+                 simulation=None, db=None):
         """constructor"""
 
         if len(parameters) == 0:
             raise RuntimeError('no parameters given')
 
         self._parameters = parameters
+        self._paramlist = tuple(sorted(list(parameters.keys())))
         self._log = logging.getLogger(f'OptClim2.{self.__class__.__name__}')
         self._basedir = basedir
+        self._session = None
 
-        dbName = basedir / 'objective_function.sqlite'
-
-        # generate database query strings
-        self._paramlist = tuple(sorted(list(parameters.keys())))
-        slct = []
-        insrt = []
-        for p in self._paramlist:
-            # make sure that parameter names are alpha numeric to avoid
-            # sql injection attacks
-            if not p.isalnum():
-                raise ValueError(f'{p} should be alpha-numeric')
-            slct.append(f'{p}=:{p}')
-            insrt.append(f':{p}')
-        insrt.append(str(LookupState.PROVISIONAL.value))
-        insrt.append('null')
-        self._select_new_str = ', '.join(self._paramlist)
-        self._select_str = ' and '.join(slct)
-        self._insert_str = '(null,' + ','.join(insrt) + ')'
-
-        if not dbName.exists():
-            self._log.info('create db')
-            self._con = sqlite3.connect(dbName)
-
-            cur = self.con.cursor()
-            cur.execute(
-                """create table if not exists parameters
-                (name text, minv real, maxv real, resolution real);
-                """)
-            cols = []
-            for p in self._paramlist:
-                cols.append(f'{p} integer')
-                cur.execute("insert into parameters values (?,?,?,?);",
-                            (p, parameters[p].minv, parameters[p].maxv,
-                             parameters[p].resolution))
-            cols.append("state integer")
-            if len(self.RESULT_TYPE) > 0:
-                cols.append(f"result {self.RESULT_TYPE}")
-            cur.execute(
-                "create table if not exists lookup ("
-                "id integer primary key autoincrement, "
-                "{0});".format(",".join(cols)))
-            self.con.commit()
+        if db is None:
+            dbName = 'sqlite:///' + str(basedir / 'objective_function.sqlite')
         else:
-            self._log.info('checking db')
-            self._con = sqlite3.connect(dbName)
-            paramlist = list(parameters.keys())
+            dbName = db
 
-            cur = self.con.cursor()
-            cur.execute('select * from parameters;')
+        self._session = _sessionmaker(dbName)
+
+        # get the study
+        self._study = self._session.query(DBStudy).filter_by(
+            name=study).one_or_none()
+        if self._study is None:
+            self._log.debug(f'creating study {study}')
+            self._study = DBStudy(name=study)
+            self.session.add(self._study)
+            for p in self.parameters:
+                getDBParameter(self._study, p, self.parameters[p])
+            self.session.commit()
+        else:
+            self._log.debug(f'loading study {study}')
             error = False
-            for p, minv, maxv, res in cur.fetchall():
-                if p not in paramlist:
-                    self._log.error(
-                        f'parameter {p} not found in configuration')
-                    error = True
-                    continue
-                if abs(res - parameters[p].resolution) > min(
-                        res, parameters[p].resolution):
-                    self._log.error(f'resolution of {p} does not match')
-                    error = True
-                if abs(minv - parameters[p].minv) > parameters[p].resolution:
-                    self._log.error(f'min value of {p} does not match')
-                    error = True
-                if abs(maxv - parameters[p].maxv) > parameters[p].resolution:
-                    self._log.error(f'max value of {p} does not match')
-                    error = True
-                paramlist.remove(p)
-            for p in paramlist:
-                self._log.error(f'parameter {p} not found in database')
+            if self.num_params != len(self._study.parameters):
+                self._log.error(
+                    f'number of parameters in {study} does not match')
                 error = True
+            else:
+                for p in self._study.parameters:
+                    if p.name not in self.parameters:
+                        self._log.error(
+                            f'parameter {p.name} missing from configuration')
+                        error = True
+                        continue
+                    if self.parameters[p.name] != p.param:
+                        self._log.error(f'parameter {p.name} does not match')
+                        self._log.error(f'parameter in DB: {p.param}')
+                        self._log.error(
+                            f'parameter in config: {self.parameters[p.name]}')
+                        error = True
             if error:
                 raise RuntimeError('configuration does not match database')
 
         self._lb = None
         self._ub = None
+
+        self._simulation = None
+        if simulation is not None:
+            self.setDefaultSimulation(simulation)
 
     @property
     def basedir(self):
@@ -116,8 +113,13 @@ class ObjectiveFunction(metaclass=ABCMeta):
         return self._basedir
 
     @property
-    def con(self):
-        return self._con
+    def session(self):
+        return self._session
+
+    @property
+    def study(self):
+        """the name of the study"""
+        return str(self._study.name)
 
     @property
     def num_params(self):
@@ -129,8 +131,7 @@ class ObjectiveFunction(metaclass=ABCMeta):
         """dictionary of parameters"""
         return self._parameters
 
-    @property
-    def lower_bounds(self):
+    def getLowerBounds(self):
         """an array containing the lower bounds"""
         if self._lb is None:
             self._lb = []
@@ -139,8 +140,7 @@ class ObjectiveFunction(metaclass=ABCMeta):
             self._lb = numpy.array(self._lb)
         return self._lb
 
-    @property
-    def upper_bounds(self):
+    def getUpperBounds(self):
         """an array containing the upper bounds"""
         if self._ub is None:
             self._ub = []
@@ -149,195 +149,225 @@ class ObjectiveFunction(metaclass=ABCMeta):
             self._ub = numpy.array(self._ub)
         return self._ub
 
-    def values2params(self, values):
-        """create a dictionary of parameter values from list of values
+    @property
+    def lower_bounds(self):
+        """an array containing the lower bounds"""
+        return self.getLowerBounds()
 
-        :param values: a list/tuple of values
-        :return: a dictionary of parameters
+    @property
+    def upper_bounds(self):
+        """an array containing the upper bounds"""
+        return self.getUpperBounds()
+
+    @property
+    def simulations(self):
+        """the list of simulation names associated with study"""
+        sims = [s.name for s in self._study.simulations]
+        return sims
+
+    def _select_simulation(self, name, create=True):
+        """select a simulation
+
+        :param name: name of simulation
+        :type name: str
+        :param create: create simulation if it does not already exist
+        :type create: bool
         """
-        assert len(values) == len(self._paramlist)
-        params = {}
-        for i, p in enumerate(self._paramlist):
-            params[p] = values[i]
-        return params
 
-    def params2values(self, params):
-        """create an array of values from a dictionary of parameters
-
-        :param params: a dictionary of parameters
-        :return: a array of values
-        """
-        values = []
-        for p in self._paramlist:
-            values.append(params[p])
-        return numpy.array(values)
-
-    def _getIparam(self, params):
-        """convert dictionary of real valued parameters to scaled integer
-        parameters"""
-        if len(params) != len(self.parameters):
-            raise RuntimeError("the number of parameters does not match")
-        iparam = {}
-        for p in params:
-            if p not in self.parameters:
-                raise RuntimeError(f'parameter {p} not found')
-            iparam[p] = self.parameters[p].transform(params[p])
-        return iparam
-
-    def _getRparam(self, params):
-        """convert dictionary of integer valued parameters to real
-           parameters"""
-        if len(params) != len(self.parameters):
-            raise RuntimeError("the number of parameters does not match")
-        rparam = {}
-        for p in params:
-            if p not in self.parameters:
-                raise RuntimeError(f'parameter {p} not found')
-            rparam[p] = self.parameters[p].inv_transform(params[p])
-        return rparam
-
-    def state(self, params):
-        """look up parameters
-
-        :param parms: dictionary containing parameter values
-        :raises LookupError: if entry for parameter set does not exist
-        :return: state
-        :rtype: LookupState
-        """
-        iparam = self._getIparam(params)
-        cur = self.con.cursor()
-        cur.execute(
-            'select state from lookup where ' + self._select_str,
-            iparam)
-        r = cur.fetchone()
-        if r is None:
-            raise LookupError("no entry for parameter set found")
-        return LookupState(r[0])
-
-    def __call__(self, x, grad):
-        """look up parameters
-
-        :param x: vector containing parameter values
-        :param grad: vector of length 0
-        :type grad: numpy.ndarray
-        :raises OptClimNewRun: when lookup fails
-        :raises OptClimWaiting: when completed entries are required
-        :return: returns the value if lookup succeeds and state is completed
-                 return a random value otherwise
-        :rtype: float
-        """
-        if grad.size > 0:
-            raise RuntimeError(
-                'OptClim2 only supports derivative free optimisations')
-        return self.get_result(self.values2params(x))
-
-    def _lookup_params(self, params):
-        """look up parameters
-
-        :param parms: dictionary containing parameter values
-        :raises OptClimNewRun: when lookup fails
-        :raises OptClimWaiting: when completed entries are required
-        :return: returns the value of the lookup
-        """
-        iparam = self._getIparam(params)
-        self._log.debug('looking up params')
-        cur = self.con.cursor()
-        cur.execute(
-            'select state, id, result from lookup where ' + self._select_str,
-            iparam)
-        r = cur.fetchone()
-        if r is None:
-            # check if we already have a provisional value
-            cur.execute('select id from lookup where state = ?;',
-                        (LookupState.PROVISIONAL.value,))
-            r = cur.fetchone()
-            if r is None:
-                self._log.info('new provisional parameter set')
-                # a provisional value
-                cur.execute(
-                    'insert into lookup values ' + self._insert_str,
-                    iparam)
-                self.con.commit()
-                raise OptClimPreliminaryRun
+        simulation = self._session.query(DBSimulation).filter_by(
+            name=name, study=self._study).one_or_none()
+        if simulation is None:
+            if create:
+                self._log.debug(f'create simulation {name}')
+                simulation = DBSimulation(name=name, study=self._study)
+                self.session.commit()
             else:
+                raise LookupError(
+                    f'study {self.study} has no simulation {name}')
+        return simulation
+
+    def setDefaultSimulation(self, name):
+        """set the default simulation
+
+        :param name: name of simulation
+        :type name: str
+        """
+        self._simulation = self._select_simulation(name)
+
+    def getSimulation(self, simulation=None):
+        """get simulation object
+
+        :param simulation: the name of the simulation or None
+                           if None get the default simulation
+        :type simulation: str
+        """
+        if simulation is not None:
+            sim = self._select_simulation(simulation, create=False)
+        else:
+            sim = self._simulation
+        if sim is None:
+            raise RuntimeError('no simulation selected')
+        return sim
+
+    def _getRun(self, parameters, simulation=None):
+        """look up parameters
+
+        :param parms: dictionary containing parameter values
+        :param simulation: the name of the simulation
+        :raises LookupError: when lookup fails
+        """
+        sim = self.getSimulation(simulation)
+
+        dbParams = {}
+        dbParams['runid'] = []
+        for p in sim.study.parameters:
+            dbParams[p.name] = []
+        for run in sim.runs:
+            dbParams['runid'].append(run.id)
+            for p in run.values:
+                dbParams[p.parameter.name].append(p.value)
+
+        # turn into pandas dataframe to query
+        dbParams = pandas.DataFrame(dbParams)
+        # construct query
+        query = []
+        for p in self.parameters:
+            query.append('({}=={})'.format(
+                p, self.parameters[p].transform(parameters[p])))
+        query = ' & '.join(query)
+        runid = dbParams.query(query)
+
+        if len(runid) == 0:
+            raise LookupError("no entry for parameter set found")
+        runid = int(runid.runid.iloc[0])
+        run = self.session.query(self._Run).filter_by(id=runid).one()
+        return run
+
+    def getRunID(self, parameters, simulation=None):
+        """get ID of run
+
+        :param parms: dictionary containing parameter values
+        :param simulation: the name of the simulation
+        """
+        run = self._getRun(parameters, simulation=simulation)
+        return run.id
+
+    def state(self, parameters, simulation=None):
+        """get run state
+
+        :param parms: dictionary containing parameter values
+        :param simulation: the name of the simulation
+        """
+        run = self._getRun(parameters, simulation=simulation)
+        return run.state
+
+    def _lookupRun(self, parameters, simulation=None):
+        """look up parameters
+
+        :param parmeters: dictionary containing parameter values
+        :param simulation: the name of the simulation
+        :raises OptClimNewRun: when lookup fails
+        :raises OptClimWaiting: when completed entries are required
+        """
+        sim = self.getSimulation(simulation)
+
+        run = None
+        try:
+            run = self._getRun(parameters, simulation=simulation)
+        except LookupError:
+            pass
+
+        if run is None:
+            # check if we already have a provisional entry
+            run = self.session.query(self._Run).filter_by(
+                simulation=sim, state=LookupState.PROVISIONAL).one_or_none()
+            if run is not None:
                 # we already have a provisional value
                 # delete the previous one and wait
                 self._log.info('remove provisional parameter set')
-                cur.execute(
-                    'delete from lookup where id = ?;', (r[0], ))
-                self.con.commit()
+                self.session.delete(run)
+                self.session.commit()
                 raise OptClimWaiting
 
-        state = LookupState(r[0])
-        if state == LookupState.PROVISIONAL:
+            # create a new entry
+            self._log.info('new provisional parameter set')
+            run = self._Run(sim, parameters)
+            run.state = LookupState.PROVISIONAL
+            self.session.commit()
+            raise OptClimPreliminaryRun
+
+        if run.state == LookupState.PROVISIONAL:
             self._log.info('provisional parameter set changed to new')
-            cur.execute('update lookup set state = ? where id = ?;',
-                        (LookupState.NEW.value, r[1]))
-            self.con.commit()
+            run.state = LookupState.NEW
+            self.session.commit()
             raise OptClimNewRun
-        elif state == LookupState.COMPLETED:
+        elif run.state == LookupState.COMPLETED:
             self._log.debug('hit completed parameter set')
         else:
             self._log.debug('hit new/active parameter set')
-        return r[2]
 
-    @abstractmethod
-    def get_result(self, params):
-        """look up parameters
+        return run
 
-        :param parms: dictionary containing parameter values
-        :raises OptClimNewRun: when lookup fails
-        :raises OptClimWaiting: when completed entries are required
-        :return: returns the value if lookup succeeds and state is completed
-                 return a random value otherwise
-        :rtype: float
-        """
-        pass
-
-    def get_new(self):
+    def get_new(self, simulation=None):
         """get a set of parameters that are not yet processed
+
+        :param simulation: the name of the simulation
 
         The parameter set changes set from new to active
 
         :return: dictionary of parameter values for which to compute the model
         :raises RuntimeError: if there is no new parameter set
         """
-        cur = self.con.cursor()
-        cur.execute('update lookup set state = ? where id in '
-                    '(select id from lookup where state = ? limit 1)'
-                    ' returning ' + self._select_new_str,
-                    (LookupState.ACTIVE.value, LookupState.NEW.value))
 
-        r = cur.fetchone()
-        if r is None:
+        sim = self.getSimulation(simulation)
+
+        run = self.session.query(DBRun)\
+                          .filter_by(simulation=sim,
+                                     state=LookupState.NEW)\
+                          .with_for_update().one_or_none()
+
+        if run is None:
             raise RuntimeError('no new parameter sets')
 
-        param = self.values2params(r)
-        self.con.commit()
+        run.state = LookupState.ACTIVE
 
-        return self._getRparam(param)
+        self.session.commit()
 
-    def _set_result_prepare(self, params):
-        """check state of lookup table and prepare for setting result
-
-        :param parms: dictionary of parameters
-        :return: parameter set ID
-        """
-        iparam = self._getIparam(params)
-        cur = self.con.cursor()
-        cur.execute(
-            'select id, state from lookup where ' + self._select_str,
-            iparam)
-        r = cur.fetchone()
-        if r is None:
-            raise LookupError("no entry for parameter set found")
-        pid, state = r
-
-        if LookupState(state) != LookupState.ACTIVE:
-            raise RuntimeError(f'parameter set is in wrong state {state}')
-
-        return pid
+        return run.parameters
 
     @abstractmethod
-    def set_result(self, params, result):
+    def get_result(self, params, simulation=None):
         pass
+
+    @abstractmethod
+    def set_result(self, params, result, simulation=None):
+        pass
+
+
+if __name__ == '__main__':
+    from .parameter import ParameterFloat
+
+    logging.basicConfig(level=logging.DEBUG)
+
+    params = {'a': ParameterFloat(-1, 1),
+              'b': ParameterFloat(0, 2, 1e-7),
+              'c': ParameterFloat(-5, 0)}
+
+    class DummyObjectiveFunction(ObjectiveFunction):
+        def get_result(self, params, simulation=None):
+            raise NotImplementedError
+
+    def set_result(self, params, result, simulation=None):
+        raise NotImplementedError
+
+    objfun = DummyObjectiveFunction("test_study", Path('/tmp'),
+                                    params, simulation="test_sim")
+
+    pset1 = {'a': 0, 'b': 1, 'c': -2}
+    pset2 = {'a': 0.5, 'b': 1, 'c': -2}
+    pset3 = {'a': 0.5, 'b': 1.5, 'c': -2}
+    # print(objfun.getRunID(pset3))
+    print(objfun.state(pset1))
+    # objfun._lookupRun(pset1)
+
+    print(objfun.get_new())
