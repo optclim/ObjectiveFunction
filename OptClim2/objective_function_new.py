@@ -30,6 +30,19 @@ _sessionmaker = SessionMaker()
 
 
 class ObjectiveFunction(metaclass=ABCMeta):
+    """class maintaining a lookup table for an objective function
+
+    :param study: the name of the study
+    :type study: str
+    :param basedir: the directory in which the lookup table is kept
+    :type basedir: Path
+    :param parameters: a dictionary mapping parameter names to the range of
+        permissible parameter values
+    :param simulation: name of the default simulation
+    :type simulation: str
+    :param db: database connection string
+    :type db: str
+    """
 
     _Run = DBRun
 
@@ -105,6 +118,7 @@ class ObjectiveFunction(metaclass=ABCMeta):
 
     @property
     def study(self):
+        """the name of the study"""
         return str(self._study.name)
 
     @property
@@ -147,6 +161,7 @@ class ObjectiveFunction(metaclass=ABCMeta):
 
     @property
     def simulations(self):
+        """the list of simulation names associated with study"""
         sims = [s.name for s in self._study.simulations]
         return sims
 
@@ -155,6 +170,8 @@ class ObjectiveFunction(metaclass=ABCMeta):
 
         :param name: name of simulation
         :type name: str
+        :param create: create simulation if it does not already exist
+        :type create: bool
         """
 
         simulation = self._session.query(DBSimulation).filter_by(
@@ -177,9 +194,15 @@ class ObjectiveFunction(metaclass=ABCMeta):
         """
         self._simulation = self._select_simulation(name)
 
-    def getSimulation(self, simulation=None, create=True):
+    def getSimulation(self, simulation=None):
+        """get simulation object
+
+        :param simulation: the name of the simulation or None
+                           if None get the default simulation
+        :type simulation: str
+        """
         if simulation is not None:
-            sim = self._select_simulation(simulation, create=create)
+            sim = self._select_simulation(simulation, create=False)
         else:
             sim = self._simulation
         if sim is None:
@@ -187,7 +210,13 @@ class ObjectiveFunction(metaclass=ABCMeta):
         return sim
 
     def _getRun(self, parameters, simulation=None):
-        sim = self.getSimulation(simulation, create=False)
+        """look up parameters
+
+        :param parms: dictionary containing parameter values
+        :param simulation: the name of the simulation
+        :raises LookupError: when lookup fails
+        """
+        sim = self.getSimulation(simulation)
 
         dbParams = {}
         dbParams['runid'] = []
@@ -215,14 +244,31 @@ class ObjectiveFunction(metaclass=ABCMeta):
         return run
 
     def getRunID(self, parameters, simulation=None):
+        """get ID of run
+
+        :param parms: dictionary containing parameter values
+        :param simulation: the name of the simulation
+        """
         run = self._getRun(parameters, simulation=simulation)
         return run.id
 
     def state(self, parameters, simulation=None):
+        """get run state
+
+        :param parms: dictionary containing parameter values
+        :param simulation: the name of the simulation
+        """
         run = self._getRun(parameters, simulation=simulation)
         return run.state
 
     def _lookupRun(self, parameters, simulation=None):
+        """look up parameters
+
+        :param parmeters: dictionary containing parameter values
+        :param simulation: the name of the simulation
+        :raises OptClimNewRun: when lookup fails
+        :raises OptClimWaiting: when completed entries are required
+        """
         sim = self.getSimulation(simulation)
 
         run = None
@@ -264,6 +310,8 @@ class ObjectiveFunction(metaclass=ABCMeta):
 
     def get_new(self, simulation=None):
         """get a set of parameters that are not yet processed
+
+        :param simulation: the name of the simulation
 
         The parameter set changes set from new to active
 

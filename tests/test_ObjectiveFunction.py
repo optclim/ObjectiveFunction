@@ -61,7 +61,7 @@ def test_select_simulation(objfunmem):
 
 def test_getSimulation_nocreate(objfunmem):
     with pytest.raises(LookupError):
-        objfunmem.getSimulation('not_here', create=False)
+        objfunmem.getSimulation('not_here')
 
 
 def test_getSimulation_fail(objfunmem):
@@ -71,7 +71,7 @@ def test_getSimulation_fail(objfunmem):
 
 def test_getSimulation_create(objfunmem):
     name = 'simulation'
-    sim = objfunmem.getSimulation(simulation=name)
+    sim = objfunmem._select_simulation(name)
     assert sim.name == name
     assert name in objfunmem.simulations
 
