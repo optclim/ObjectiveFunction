@@ -5,6 +5,7 @@ from typing import Mapping
 from pathlib import Path
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+import numpy
 import pandas
 from abc import ABCMeta, abstractmethod
 
@@ -41,6 +42,7 @@ class ObjectiveFunction(metaclass=ABCMeta):
             raise RuntimeError('no parameters given')
 
         self._parameters = parameters
+        self._paramlist = tuple(sorted(list(parameters.keys())))
         self._log = logging.getLogger(f'OptClim2.{self.__class__.__name__}')
         self._basedir = basedir
         self._session = None
@@ -85,6 +87,9 @@ class ObjectiveFunction(metaclass=ABCMeta):
             if error:
                 raise RuntimeError('configuration does not match database')
 
+        self._lb = None
+        self._ub = None
+
         self._simulation = None
         if simulation is not None:
             self.setDefaultSimulation(simulation)
@@ -111,6 +116,34 @@ class ObjectiveFunction(metaclass=ABCMeta):
     def parameters(self):
         """dictionary of parameters"""
         return self._parameters
+
+    def getLowerBounds(self):
+        """an array containing the lower bounds"""
+        if self._lb is None:
+            self._lb = []
+            for p in self._paramlist:
+                self._lb.append(self.parameters[p].minv)
+            self._lb = numpy.array(self._lb)
+        return self._lb
+
+    def getUpperBounds(self):
+        """an array containing the upper bounds"""
+        if self._ub is None:
+            self._ub = []
+            for p in self._paramlist:
+                self._ub.append(self.parameters[p].maxv)
+            self._ub = numpy.array(self._ub)
+        return self._ub
+
+    @property
+    def lower_bounds(self):
+        """an array containing the lower bounds"""
+        return self.getLowerBounds()
+
+    @property
+    def upper_bounds(self):
+        """an array containing the upper bounds"""
+        return self.getUpperBounds()
 
     @property
     def simulations(self):

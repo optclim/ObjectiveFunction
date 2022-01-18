@@ -1,4 +1,5 @@
 import pytest
+import numpy
 
 from OptClim2.objective_function_new import ObjectiveFunction
 from OptClim2 import ParameterFloat
@@ -26,6 +27,16 @@ def test_study_name(objfunmem):
 
 def test_num_params(objfunmem):
     assert objfunmem.num_params == 3
+
+
+def test_lower_bounds(objfunmem):
+    assert numpy.all(
+        objfunmem.lower_bounds == numpy.array((-1, 0, -5)))
+
+
+def test_upper_bounds(objfunmem):
+    assert numpy.all(
+        objfunmem.upper_bounds == numpy.array((1, 2, 0)))
 
 
 def test_empty_simulations(objfunmem):
