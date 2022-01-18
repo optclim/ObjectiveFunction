@@ -3,6 +3,7 @@ __all__ = ['ObjectiveFunctionMisfit']
 import random
 
 from .objective_function import ObjectiveFunction, LookupState
+from .model import DBRunMisfit
 
 
 class ObjectiveFunctionMisfit(ObjectiveFunction):
@@ -10,43 +11,51 @@ class ObjectiveFunctionMisfit(ObjectiveFunction):
 
     store the model misfit in the database
 
+    :param study: the name of the study
+    :type study: str
     :param basedir: the directory in which the lookup table is kept
     :type basedir: Path
     :param parameters: a dictionary mapping parameter names to the range of
         permissible parameter values
+    :param simulation: name of the default simulation
+    :type simulation: str
+    :param db: database connection string
+    :type db: str
     """
 
-    RESULT_TYPE = "float"
+    _Run = DBRunMisfit
 
-    def get_result(self, params):
+    def get_result(self, params, simulation=None):
         """look up parameters
 
         :param parms: dictionary containing parameter values
+        :param simulation: the name of the simulation
         :raises OptClimNewRun: when lookup fails
         :raises OptClimWaiting: when completed entries are required
         :return: returns the value if lookup succeeds and state is completed
                  return a random value otherwise
         :rtype: float
         """
-        result = self._lookup_params(params)
 
-        if result is None:
+        run = self._lookupRun(params, simulation=simulation)
+        if run.state != LookupState.COMPLETED:
             return random.random()
         else:
-            return result
+            return run.misfit
 
-    def set_result(self, params, result):
+    def set_result(self, params, result, simulation=None):
         """set the result for a paricular parameter set
 
         :param parms: dictionary of parameters
         :param result: result value to set
+        :param simulation: the name of the simulation
         :type result: float
         """
 
-        pid = self._set_result_prepare(params)
-
-        # update lookup table
-        cur = self.con.cursor()
-        cur.execute('update lookup set state = ?, result = ? where id = ?;',
-                    (LookupState.COMPLETED.value, float(result), pid))
-        self.con.commit()
+        run = self._getRun(params, simulation=simulation)
+        if run.state == LookupState.ACTIVE:
+            run.state = LookupState.COMPLETED
+            run.misfit = result
+            self.session.commit()
+        else:
+            raise RuntimeError(f'parameter set is in wrong state {run.state}')

@@ -7,6 +7,7 @@ from pathlib import Path
 
 from .parameter import Parameter
 from .objective_function import ObjectiveFunction, LookupState
+from .model import DBRunPath
 
 
 class ObjectiveFunctionResidual(ObjectiveFunction):
@@ -14,19 +15,27 @@ class ObjectiveFunctionResidual(ObjectiveFunction):
 
     store the name of a file containing the residuals
 
+    :param study: the name of the study
+    :type study: str
     :param basedir: the directory in which the lookup table is kept
     :type basedir: Path
     :param parameters: a dictionary mapping parameter names to the range of
         permissible parameter values
+    :param simulation: name of the default simulation
+    :type simulation: str
+    :param db: database connection string
+    :type db: str
     """
 
-    RESULT_TYPE = "text"
+    _Run = DBRunPath
 
-    def __init__(self, basedir: Path,                   # noqa: C901
-                 parameters: Mapping[str, Parameter]):
+    def __init__(self, study: str, basedir: Path,  # noqa C901
+                 parameters: Mapping[str, Parameter],
+                 simulation=None, db=None):
         """constructor"""
 
-        super().__init__(basedir, parameters)
+        super().__init__(study, basedir, parameters,
+                         simulation=simulation, db=db)
 
         self._num_residuals = None
 
@@ -38,10 +47,11 @@ class ObjectiveFunctionResidual(ObjectiveFunction):
         else:
             return self._num_residuals
 
-    def get_result(self, params):
+    def get_result(self, params, simulation=None):
         """look up parameters
 
         :param parms: dictionary containing parameter values
+        :param simulation: the name of the simulation
         :raises OptClimNewRun: when lookup fails
         :raises OptClimWaiting: when completed entries are required
         :return: returns the value if lookup succeeds and state is completed
@@ -49,33 +59,33 @@ class ObjectiveFunctionResidual(ObjectiveFunction):
         :rtype: numpy.arraynd
         """
 
-        result = self._lookup_params(params)
-
-        if result is None:
+        run = self._lookupRun(params, simulation=simulation)
+        if run.state != LookupState.COMPLETED:
             return numpy.random.rand(self.num_residuals)
         else:
-            with open(result, 'rb') as f:
+            with open(run.path, 'rb') as f:
                 result = numpy.load(f)
             if self._num_residuals is None:
                 self._num_residuals = result.size
             return result
 
-    def set_result(self, params, result):
+    def set_result(self, params, result, simulation=None):
         """set the result for a paricular parameter set
 
         :param parms: dictionary of parameters
         :param result: residuals to store
+        :param simulation: the name of the simulation
         :type result: numpy.ndarray
         """
 
-        pid = self._set_result_prepare(params)
-        # store residuals in file
-        fname = self.basedir / f'residuals_{pid}.npy'
-        with open(fname, 'wb') as f:
-            numpy.save(f, result)
-
-        # update lookup table
-        cur = self.con.cursor()
-        cur.execute('update lookup set state = ?, result = ? where id = ?;',
-                    (LookupState.COMPLETED.value, str(fname), pid))
-        self.con.commit()
+        run = self._getRun(params, simulation=simulation)
+        if run.state == LookupState.ACTIVE:
+            # store residuals in file
+            fname = self.basedir / f'residuals_{run.id}.npy'
+            with open(fname, 'wb') as f:
+                numpy.save(f, result)
+            run.path = str(fname)
+            run.state = LookupState.COMPLETED
+            self.session.commit()
+        else:
+            raise RuntimeError(f'parameter set is in wrong state {run.state}')
