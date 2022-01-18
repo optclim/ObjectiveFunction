@@ -10,6 +10,79 @@ def rundir(tmpdir_factory):
     return res
 
 
+@pytest.fixture
+def objfunmem(paramsA):
+    return ObjectiveFunction("study", "", paramsA, db='sqlite://')
+
+
+def test_study_name(objfunmem):
+    assert objfunmem.study == "study"
+
+
+def test_num_params(objfunmem):
+    assert objfunmem.num_params == 3
+
+
+def test_empty_simulations(objfunmem):
+    sims = objfunmem.simulations
+    assert sims == []
+
+
+def test_select_simulation_nocreate(objfunmem):
+    with pytest.raises(LookupError):
+        objfunmem._select_simulation('not_here', create=False)
+
+
+def test_select_simulation(objfunmem):
+    name = 'simulation'
+    sim = objfunmem._select_simulation(name)
+    assert sim.name == name
+    assert name in objfunmem.simulations
+
+
+def test_getSimulation_nocreate(objfunmem):
+    with pytest.raises(LookupError):
+        objfunmem.getSimulation('not_here', create=False)
+
+
+def test_getSimulation_fail(objfunmem):
+    with pytest.raises(RuntimeError):
+        objfunmem.getSimulation()
+
+
+def test_getSimulation_create(objfunmem):
+    name = 'simulation'
+    sim = objfunmem.getSimulation(simulation=name)
+    assert sim.name == name
+    assert name in objfunmem.simulations
+
+
+def test_setDefaultSimulation(objfunmem):
+    name = 'simulation'
+    objfunmem.setDefaultSimulation(name)
+    assert objfunmem._simulation.name == name
+    assert name in objfunmem.simulations
+
+
+@pytest.fixture
+def objfunmem_sim(paramsA):
+    return ObjectiveFunction("study", "", paramsA,
+                             db='sqlite://', simulation='sim')
+
+
+def test_objfun_with_sim(objfunmem_sim):
+    name = 'sim'
+    assert objfunmem_sim._simulation.name == name
+    assert name in objfunmem_sim.simulations
+
+
+def test_objfun_get_default_sim(objfunmem_sim):
+    name = 'sim'
+    sim = objfunmem_sim.getSimulation()
+    assert sim.name == name
+    assert name in objfunmem_sim.simulations
+
+
 class TestObjectiveFunction:
     @pytest.fixture
     def objfun(self):
@@ -17,10 +90,7 @@ class TestObjectiveFunction:
 
     @pytest.fixture
     def objectiveA(self, objfun, rundir, paramsA):
-        return objfun("study", rundir, paramsA)
-    
-    def test_objective_function_create(self, objfun, rundir, paramsA):
-        objfun("study", rundir, paramsA)
+        return objfun("study", rundir, paramsA, simulation="sim")
 
     def test_objective_function_read(self, objfun, objectiveA, paramsA):
         o = objectiveA
@@ -52,6 +122,3 @@ class TestObjectiveFunction:
         # wrong number of parameters in db
         with pytest.raises(RuntimeError):
             objfun("study", o.basedir, paramsA)
-
-    def test_num_params(self, objectiveA):
-        assert objectiveA.num_params == 3
