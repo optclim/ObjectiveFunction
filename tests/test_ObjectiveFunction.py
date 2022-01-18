@@ -42,6 +42,18 @@ def test_upper_bounds(objfunmem):
         objfunmem.upper_bounds == numpy.array((1, 2, 0)))
 
 
+def test_values2params_fail(objfunmem):
+    with pytest.raises(AssertionError):
+        objfunmem.values2params((0, 1))
+    with pytest.raises(AssertionError):
+        objfunmem.values2params((0, 1, 3, 4))
+
+
+def test_values2params(objfunmem):
+    assert objfunmem.values2params((0, 1, 2)) == {
+        'a': 0, 'b': 1, 'c': 2}
+
+
 def test_empty_simulations(objfunmem):
     sims = objfunmem.simulations
     assert sims == []

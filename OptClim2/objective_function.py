@@ -159,6 +159,17 @@ class ObjectiveFunction(metaclass=ABCMeta):
         """an array containing the upper bounds"""
         return self.getUpperBounds()
 
+    def values2params(self, values):
+        """create a dictionary of parameter values from list of values
+        :param values: a list/tuple of values
+        :return: a dictionary of parameters
+        """
+        assert len(values) == len(self._paramlist)
+        params = {}
+        for i, p in enumerate(self._paramlist):
+            params[p] = values[i]
+        return params
+
     @property
     def simulations(self):
         """the list of simulation names associated with study"""
@@ -342,6 +353,22 @@ class ObjectiveFunction(metaclass=ABCMeta):
     @abstractmethod
     def set_result(self, params, result, simulation=None):
         pass
+
+    def __call__(self, x, grad):
+        """look up parameters
+        :param x: vector containing parameter values
+        :param grad: vector of length 0
+        :type grad: numpy.ndarray
+        :raises OptClimNewRun: when lookup fails
+        :raises OptClimWaiting: when completed entries are required
+        :return: returns the value if lookup succeeds and state is completed
+                 return a random value otherwise
+        :rtype: float
+        """
+        if grad.size > 0:
+            raise RuntimeError(
+                'OptClim2 only supports derivative free optimisations')
+        return self.get_result(self.values2params(x))
 
 
 if __name__ == '__main__':

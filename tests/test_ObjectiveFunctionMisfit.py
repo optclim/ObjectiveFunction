@@ -90,7 +90,6 @@ class TestObjectiveFunctionMisfit(TOF):
             objectiveAvA.set_result(valuesA, resultA)
 
     def test_call(self, objectiveAvA, valuesA, resultA):
-        return
         objectiveAvA.get_new()
         objectiveAvA.set_result(valuesA, resultA)
         assert objectiveAvA(list(valuesA.values()), numpy.array([])) == resultA
