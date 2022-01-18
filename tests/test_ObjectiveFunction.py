@@ -4,6 +4,11 @@ from OptClim2.objective_function_new import ObjectiveFunction
 from OptClim2 import ParameterFloat
 
 
+class DummyObjectiveFunction(ObjectiveFunction):
+    def get_result(self, params, simulation=None):
+        raise NotImplementedError
+
+
 @pytest.fixture
 def rundir(tmpdir_factory):
     res = tmpdir_factory.mktemp("objective_function")
@@ -12,7 +17,7 @@ def rundir(tmpdir_factory):
 
 @pytest.fixture
 def objfunmem(paramsA):
-    return ObjectiveFunction("study", "", paramsA, db='sqlite://')
+    return DummyObjectiveFunction("study", "", paramsA, db='sqlite://')
 
 
 def test_study_name(objfunmem):
@@ -66,8 +71,8 @@ def test_setDefaultSimulation(objfunmem):
 
 @pytest.fixture
 def objfunmem_sim(paramsA):
-    return ObjectiveFunction("study", "", paramsA,
-                             db='sqlite://', simulation='sim')
+    return DummyObjectiveFunction("study", "", paramsA,
+                                  db='sqlite://', simulation='sim')
 
 
 def test_objfun_with_sim(objfunmem_sim):
@@ -86,7 +91,7 @@ def test_objfun_get_default_sim(objfunmem_sim):
 class TestObjectiveFunction:
     @pytest.fixture
     def objfun(self):
-        return ObjectiveFunction
+        return DummyObjectiveFunction
 
     @pytest.fixture
     def objectiveA(self, objfun, rundir, paramsA):

@@ -6,6 +6,7 @@ from pathlib import Path
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 import pandas
+from abc import ABCMeta, abstractmethod
 
 from .parameter import Parameter
 from .model import Base, DBStudy, getDBParameter, DBSimulation, DBRun
@@ -27,7 +28,7 @@ class SessionMaker:
 _sessionmaker = SessionMaker()
 
 
-class ObjectiveFunction:
+class ObjectiveFunction(metaclass=ABCMeta):
 
     _Run = DBRun
 
@@ -227,6 +228,10 @@ class ObjectiveFunction:
             self._log.debug('hit new/active parameter set')
 
         return run
+
+    @abstractmethod
+    def get_result(self, params, simulation=None):
+        pass
 
 
 if __name__ == '__main__':
