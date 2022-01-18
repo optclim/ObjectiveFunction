@@ -9,6 +9,9 @@ class DummyObjectiveFunction(ObjectiveFunction):
     def get_result(self, params, simulation=None):
         raise NotImplementedError
 
+    def set_result(self, params, result, simulation=None):
+        raise NotImplementedError
+
 
 @pytest.fixture
 def rundir(tmpdir_factory):
@@ -97,6 +100,11 @@ def test_objfun_get_default_sim(objfunmem_sim):
     sim = objfunmem_sim.getSimulation()
     assert sim.name == name
     assert name in objfunmem_sim.simulations
+
+
+def test_get_new_none(objfunmem_sim):
+    with pytest.raises(RuntimeError):
+        objfunmem_sim.get_new()
 
 
 class TestObjectiveFunction:

@@ -262,8 +262,37 @@ class ObjectiveFunction(metaclass=ABCMeta):
 
         return run
 
+    def get_new(self, simulation=None):
+        """get a set of parameters that are not yet processed
+
+        The parameter set changes set from new to active
+
+        :return: dictionary of parameter values for which to compute the model
+        :raises RuntimeError: if there is no new parameter set
+        """
+
+        sim = self.getSimulation(simulation)
+
+        run = self.session.query(DBRun)\
+                          .filter_by(simulation=sim,
+                                     state=LookupState.NEW)\
+                          .with_for_update().one_or_none()
+
+        if run is None:
+            raise RuntimeError('no new parameter sets')
+
+        run.state = LookupState.ACTIVE
+
+        self.session.commit()
+
+        return run.parameters
+
     @abstractmethod
     def get_result(self, params, simulation=None):
+        pass
+
+    @abstractmethod
+    def set_result(self, params, result, simulation=None):
         pass
 
 
@@ -276,12 +305,21 @@ if __name__ == '__main__':
               'b': ParameterFloat(0, 2, 1e-7),
               'c': ParameterFloat(-5, 0)}
 
-    objfun = ObjectiveFunction("test_study", Path('/tmp'),
-                               params, simulation="test_sim")
+    class DummyObjectiveFunction(ObjectiveFunction):
+        def get_result(self, params, simulation=None):
+            raise NotImplementedError
+
+    def set_result(self, params, result, simulation=None):
+        raise NotImplementedError
+
+    objfun = DummyObjectiveFunction("test_study", Path('/tmp'),
+                                    params, simulation="test_sim")
 
     pset1 = {'a': 0, 'b': 1, 'c': -2}
     pset2 = {'a': 0.5, 'b': 1, 'c': -2}
     pset3 = {'a': 0.5, 'b': 1.5, 'c': -2}
-    print(objfun.getRunID(pset3))
+    # print(objfun.getRunID(pset3))
     print(objfun.state(pset1))
-    objfun._lookupRun(pset1)
+    # objfun._lookupRun(pset1)
+
+    print(objfun.get_new())
