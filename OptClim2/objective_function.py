@@ -345,7 +345,7 @@ class ObjectiveFunction(metaclass=ABCMeta):
         run = self.session.query(DBRun)\
                           .filter_by(simulation=sim,
                                      state=LookupState.NEW)\
-                          .with_for_update().one_or_none()
+                          .with_for_update().first()
 
         if run is None:
             raise RuntimeError('no new parameter sets')
