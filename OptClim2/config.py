@@ -21,6 +21,8 @@ class OptclimConfig:
 
     defaultCfgStr = """
     [setup]
+      study = string() # the name of the study
+      simulation = string() # the name of the simulation
       basedir = string() # the base directory
       objfun = string(default=misfit)
 
@@ -153,6 +155,16 @@ class OptclimConfig:
         return p
 
     @property
+    def study(self):
+        """the name of the study"""
+        return self.cfg['setup']['study']
+
+    @property
+    def simulation(self):
+        """the name of the simulation"""
+        return self.cfg['setup']['simulation']
+
+    @property
     def objfunType(self):
         """the objective function type"""
         return self.cfg['setup']['objfun']
@@ -169,7 +181,9 @@ class OptclimConfig:
                 msg = 'wrong type of objective function: ' + self.objfunType
                 self._log.error(msg)
                 raise RuntimeError(msg)
-            self._objfun = objfun(self.basedir, self.optimise_parameters)
+            self._objfun = objfun(self.study, self.basedir,
+                                  self.optimise_parameters,
+                                  simulation=self.simulation)
         return self._objfun
 
 
