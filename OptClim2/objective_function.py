@@ -170,6 +170,16 @@ class ObjectiveFunction(metaclass=ABCMeta):
             params[p] = values[i]
         return params
 
+    def params2values(self, params):
+        """create an array of values from a dictionary of parameters
+        :param params: a dictionary of parameters
+        :return: a array of values
+        """
+        values = []
+        for p in self._paramlist:
+            values.append(params[p])
+        return numpy.array(values)
+
     @property
     def simulations(self):
         """the list of simulation names associated with study"""
