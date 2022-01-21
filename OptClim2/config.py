@@ -22,7 +22,7 @@ class OptclimConfig:
     defaultCfgStr = """
     [setup]
       study = string() # the name of the study
-      simulation = string() # the name of the simulation
+      scenario = string() # the name of the scenario
       basedir = string() # the base directory
       objfun = string(default=misfit)
       db = string(default=None) # SQLAlchemy DB connection string
@@ -161,9 +161,9 @@ class OptclimConfig:
         return self.cfg['setup']['study']
 
     @property
-    def simulation(self):
-        """the name of the simulation"""
-        return self.cfg['setup']['simulation']
+    def scenario(self):
+        """the name of the scenario"""
+        return self.cfg['setup']['scenario']
 
     @property
     def objfunType(self):
@@ -184,7 +184,7 @@ class OptclimConfig:
                 raise RuntimeError(msg)
             self._objfun = objfun(self.study, self.basedir,
                                   self.optimise_parameters,
-                                  simulation=self.simulation,
+                                  scenario=self.scenario,
                                   db=self.cfg['setup']['db'])
         return self._objfun
 

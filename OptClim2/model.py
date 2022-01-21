@@ -1,5 +1,5 @@
 __all__ = ['Base', 'DBStudy', 'DBParameterInt', 'DBParameterFloat',
-           'getDBParameter', 'DBSimulation']
+           'getDBParameter', 'DBScenario']
 
 from sqlalchemy.orm import declarative_base, relationship
 from sqlalchemy import Column, Integer, String, Float, Enum
@@ -19,7 +19,7 @@ class DBStudy(Base):
 
     parameters = relationship("DBParameter", order_by="DBParameter.name",
                               back_populates="study")
-    simulations = relationship("DBSimulation", back_populates="study")
+    scenarios = relationship("DBScenario", back_populates="study")
 
     def __repr__(self):
         return f"<DBStudy(name={self.name})>"
@@ -105,39 +105,39 @@ def getDBParameter(study, name, parameter):
         raise TypeError('wrong type for argument parameter')
 
 
-class DBSimulation(Base):
-    __tablename__ = 'simulations'
+class DBScenario(Base):
+    __tablename__ = 'scenarios'
 
     id = Column(Integer, primary_key=True)
     name = Column(String)
     study_id = Column(Integer, ForeignKey('studies.id'))
 
-    study = relationship("DBStudy", back_populates="simulations")
-    runs = relationship("DBRun", back_populates="simulation")
+    study = relationship("DBStudy", back_populates="scenarios")
+    runs = relationship("DBRun", back_populates="scenario")
 
     __table_args__ = (UniqueConstraint('name', 'study_id',
-                                       name='_unique_simulation'), )
+                                       name='_unique_scenario'), )
 
 
 class DBRun(Base):
     __tablename__ = 'runs'
 
     id = Column(Integer, primary_key=True)
-    simulation_id = Column(Integer, ForeignKey('simulations.id'))
+    scenario_id = Column(Integer, ForeignKey('scenarios.id'))
     state = Column(Enum(LookupState))
     type = Column(String)
 
     values = relationship("DBRunParameters", back_populates="_run",
                           cascade="all, delete-orphan")
-    simulation = relationship("DBSimulation", back_populates="runs")
+    scenario = relationship("DBScenario", back_populates="runs")
 
     __mapper_args__ = {
         'polymorphic_identity': 'run',
         'polymorphic_on': type}
 
-    def __init__(self, simulation, parameters):
-        self.simulation = simulation
-        for db_param in self.simulation.study.parameters:
+    def __init__(self, scenario, parameters):
+        self.scenario = scenario
+        for db_param in self.scenario.study.parameters:
             DBRunParameters(
                 _run=self, parameter=db_param,
                 value=db_param.param.transform(parameters[db_param.name]))
@@ -210,13 +210,13 @@ if __name__ == '__main__':
     session.add(paramB)
     session.add(paramC)
 
-    sim = DBSimulation(name="test_sim", study=study)
+    scenario = DBScenario(name="test_scenario", study=study)
 
     values = {'A': 5,
               'B': 10,
               'C': -10}
 
-    run = DBRun(sim, values)
+    run = DBRun(scenario, values)
     print('v', run.values)
     print('p', run.parameters)
 

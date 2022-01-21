@@ -21,8 +21,8 @@ class ObjectiveFunctionResidual(ObjectiveFunction):
     :type basedir: Path
     :param parameters: a dictionary mapping parameter names to the range of
         permissible parameter values
-    :param simulation: name of the default simulation
-    :type simulation: str
+    :param scenario: name of the default scenario
+    :type scenario: str
     :param db: database connection string
     :type db: str
     """
@@ -31,11 +31,11 @@ class ObjectiveFunctionResidual(ObjectiveFunction):
 
     def __init__(self, study: str, basedir: Path,  # noqa C901
                  parameters: Mapping[str, Parameter],
-                 simulation=None, db=None):
+                 scenario=None, db=None):
         """constructor"""
 
         super().__init__(study, basedir, parameters,
-                         simulation=simulation, db=db)
+                         scenario=scenario, db=db)
 
         self._num_residuals = None
 
@@ -47,11 +47,11 @@ class ObjectiveFunctionResidual(ObjectiveFunction):
         else:
             return self._num_residuals
 
-    def get_result(self, params, simulation=None):
+    def get_result(self, params, scenario=None):
         """look up parameters
 
         :param parms: dictionary containing parameter values
-        :param simulation: the name of the simulation
+        :param scenario: the name of the scenario
         :raises OptClimNewRun: when lookup fails
         :raises OptClimWaiting: when completed entries are required
         :return: returns the value if lookup succeeds and state is completed
@@ -59,7 +59,7 @@ class ObjectiveFunctionResidual(ObjectiveFunction):
         :rtype: numpy.arraynd
         """
 
-        run = self._lookupRun(params, simulation=simulation)
+        run = self._lookupRun(params, scenario=scenario)
         if run.state != LookupState.COMPLETED:
             return numpy.random.rand(self.num_residuals)
         else:
@@ -69,16 +69,16 @@ class ObjectiveFunctionResidual(ObjectiveFunction):
                 self._num_residuals = result.size
             return result
 
-    def set_result(self, params, result, simulation=None):
+    def set_result(self, params, result, scenario=None):
         """set the result for a paricular parameter set
 
         :param parms: dictionary of parameters
         :param result: residuals to store
-        :param simulation: the name of the simulation
+        :param scenario: the name of the scenario
         :type result: numpy.ndarray
         """
 
-        run = self._getRun(params, simulation=simulation)
+        run = self._getRun(params, scenario=scenario)
         if run.state == LookupState.ACTIVE:
             # store residuals in file
             fname = self.basedir / f'residuals_{run.id}.npy'

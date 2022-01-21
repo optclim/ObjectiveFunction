@@ -10,7 +10,7 @@ import pandas
 from abc import ABCMeta, abstractmethod
 
 from .parameter import Parameter
-from .model import Base, DBStudy, getDBParameter, DBSimulation, DBRun
+from .model import Base, DBStudy, getDBParameter, DBScenario, DBRun
 from .common import OptClimPreliminaryRun, OptClimNewRun, OptClimWaiting
 from .common import LookupState
 
@@ -38,8 +38,8 @@ class ObjectiveFunction(metaclass=ABCMeta):
     :type basedir: Path
     :param parameters: a dictionary mapping parameter names to the range of
         permissible parameter values
-    :param simulation: name of the default simulation
-    :type simulation: str
+    :param scenario: name of the default scenario
+    :type scenario: str
     :param db: database connection string
     :type db: str
     """
@@ -48,7 +48,7 @@ class ObjectiveFunction(metaclass=ABCMeta):
 
     def __init__(self, study: str, basedir: Path,  # noqa C901
                  parameters: Mapping[str, Parameter],
-                 simulation=None, db=None):
+                 scenario=None, db=None):
         """constructor"""
 
         if len(parameters) == 0:
@@ -103,9 +103,9 @@ class ObjectiveFunction(metaclass=ABCMeta):
         self._lb = None
         self._ub = None
 
-        self._simulation = None
-        if simulation is not None:
-            self.setDefaultSimulation(simulation)
+        self._scenario = None
+        if scenario is not None:
+            self.setDefaultScenario(scenario)
 
     @property
     def basedir(self):
@@ -181,69 +181,69 @@ class ObjectiveFunction(metaclass=ABCMeta):
         return numpy.array(values)
 
     @property
-    def simulations(self):
-        """the list of simulation names associated with study"""
-        sims = [s.name for s in self._study.simulations]
-        return sims
+    def scenarios(self):
+        """the list of scenario names associated with study"""
+        scenarios = [s.name for s in self._study.scenarios]
+        return scenarios
 
-    def _select_simulation(self, name, create=True):
-        """select a simulation
+    def _select_scenario(self, name, create=True):
+        """select a scenario
 
-        :param name: name of simulation
+        :param name: name of scenario
         :type name: str
-        :param create: create simulation if it does not already exist
+        :param create: create scenario if it does not already exist
         :type create: bool
         """
 
-        simulation = self._session.query(DBSimulation).filter_by(
+        scenario = self._session.query(DBScenario).filter_by(
             name=name, study=self._study).one_or_none()
-        if simulation is None:
+        if scenario is None:
             if create:
-                self._log.debug(f'create simulation {name}')
-                simulation = DBSimulation(name=name, study=self._study)
+                self._log.debug(f'create scenario {name}')
+                scenario = DBScenario(name=name, study=self._study)
                 self.session.commit()
             else:
                 raise LookupError(
-                    f'study {self.study} has no simulation {name}')
-        return simulation
+                    f'study {self.study} has no scenario {name}')
+        return scenario
 
-    def setDefaultSimulation(self, name):
-        """set the default simulation
+    def setDefaultScenario(self, name):
+        """set the default scenario
 
-        :param name: name of simulation
+        :param name: name of scenario
         :type name: str
         """
-        self._simulation = self._select_simulation(name)
+        self._scenario = self._select_scenario(name)
 
-    def getSimulation(self, simulation=None):
-        """get simulation object
+    def getScenario(self, scenario=None):
+        """get scenario object
 
-        :param simulation: the name of the simulation or None
-                           if None get the default simulation
-        :type simulation: str
+        :param scenario: the name of the scenario or None
+                           if None get the default scenario
+        :type scenario: str
         """
-        if simulation is not None:
-            sim = self._select_simulation(simulation, create=False)
+        if scenario is not None:
+            s = self._select_scenario(scenario, create=False)
         else:
-            sim = self._simulation
-        if sim is None:
-            raise RuntimeError('no simulation selected')
-        return sim
+            s = self._scenario
+        if s is None:
+            raise RuntimeError('no scenario selected')
+        return s
 
-    def _getRun(self, parameters, simulation=None):
+    def _getRun(self, parameters, scenario=None):
         """look up parameters
 
         :param parms: dictionary containing parameter values
-        :param simulation: the name of the simulation
+        :param scenario: the name of the scenario
         :raises LookupError: when lookup fails
         """
-        sim = self.getSimulation(simulation)
+        s = self.getScenario(scenario)
 
         dbParams = {}
         dbParams['runid'] = []
-        for p in sim.study.parameters:
+        for p in s.study.parameters:
             dbParams[p.name] = []
-        for run in sim.runs:
+        for run in s.runs:
             dbParams['runid'].append(run.id)
             for p in run.values:
                 dbParams[p.parameter.name].append(p.value)
@@ -264,44 +264,44 @@ class ObjectiveFunction(metaclass=ABCMeta):
         run = self.session.query(self._Run).filter_by(id=runid).one()
         return run
 
-    def getRunID(self, parameters, simulation=None):
+    def getRunID(self, parameters, scenario=None):
         """get ID of run
 
         :param parms: dictionary containing parameter values
-        :param simulation: the name of the simulation
+        :param scenario: the name of the scenario
         """
-        run = self._getRun(parameters, simulation=simulation)
+        run = self._getRun(parameters, scenario=scenario)
         return run.id
 
-    def state(self, parameters, simulation=None):
+    def state(self, parameters, scenario=None):
         """get run state
 
         :param parms: dictionary containing parameter values
-        :param simulation: the name of the simulation
+        :param scenario: the name of the scenario
         """
-        run = self._getRun(parameters, simulation=simulation)
+        run = self._getRun(parameters, scenario=scenario)
         return run.state
 
-    def _lookupRun(self, parameters, simulation=None):
+    def _lookupRun(self, parameters, scenario=None):
         """look up parameters
 
         :param parmeters: dictionary containing parameter values
-        :param simulation: the name of the simulation
+        :param scenario: the name of the scenario
         :raises OptClimNewRun: when lookup fails
         :raises OptClimWaiting: when completed entries are required
         """
-        sim = self.getSimulation(simulation)
+        s = self.getScenario(scenario)
 
         run = None
         try:
-            run = self._getRun(parameters, simulation=simulation)
+            run = self._getRun(parameters, scenario=scenario)
         except LookupError:
             pass
 
         if run is None:
             # check if we already have a provisional entry
             run = self.session.query(self._Run).filter_by(
-                simulation=sim, state=LookupState.PROVISIONAL).one_or_none()
+                scenario=s, state=LookupState.PROVISIONAL).one_or_none()
             if run is not None:
                 # we already have a provisional value
                 # delete the previous one and wait
@@ -312,7 +312,7 @@ class ObjectiveFunction(metaclass=ABCMeta):
 
             # create a new entry
             self._log.info('new provisional parameter set')
-            run = self._Run(sim, parameters)
+            run = self._Run(s, parameters)
             run.state = LookupState.PROVISIONAL
             self.session.commit()
             raise OptClimPreliminaryRun
@@ -329,10 +329,10 @@ class ObjectiveFunction(metaclass=ABCMeta):
 
         return run
 
-    def get_new(self, simulation=None):
+    def get_new(self, scenario=None):
         """get a set of parameters that are not yet processed
 
-        :param simulation: the name of the simulation
+        :param scenario: the name of the scenario
 
         The parameter set changes set from new to active
 
@@ -340,10 +340,10 @@ class ObjectiveFunction(metaclass=ABCMeta):
         :raises RuntimeError: if there is no new parameter set
         """
 
-        sim = self.getSimulation(simulation)
+        s = self.getScenario(scenario)
 
         run = self.session.query(DBRun)\
-                          .filter_by(simulation=sim,
+                          .filter_by(scenario=s,
                                      state=LookupState.NEW)\
                           .with_for_update().first()
 
@@ -357,11 +357,11 @@ class ObjectiveFunction(metaclass=ABCMeta):
         return run.parameters
 
     @abstractmethod
-    def get_result(self, params, simulation=None):
+    def get_result(self, params, scenario=None):
         pass
 
     @abstractmethod
-    def set_result(self, params, result, simulation=None):
+    def set_result(self, params, result, scenario=None):
         pass
 
     def __call__(self, x, grad):
@@ -391,14 +391,14 @@ if __name__ == '__main__':
               'c': ParameterFloat(-5, 0)}
 
     class DummyObjectiveFunction(ObjectiveFunction):
-        def get_result(self, params, simulation=None):
+        def get_result(self, params, scenario=None):
             raise NotImplementedError
 
-    def set_result(self, params, result, simulation=None):
+    def set_result(self, params, result, scenario=None):
         raise NotImplementedError
 
     objfun = DummyObjectiveFunction("test_study", Path('/tmp'),
-                                    params, simulation="test_sim")
+                                    params, scenario="test_scenario")
 
     pset1 = {'a': 0, 'b': 1, 'c': -2}
     pset2 = {'a': 0.5, 'b': 1, 'c': -2}

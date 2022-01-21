@@ -6,10 +6,10 @@ from OptClim2 import ParameterFloat
 
 
 class DummyObjectiveFunction(ObjectiveFunction):
-    def get_result(self, params, simulation=None):
+    def get_result(self, params, scenario=None):
         raise NotImplementedError
 
-    def set_result(self, params, result, simulation=None):
+    def set_result(self, params, result, scenario=None):
         raise NotImplementedError
 
 
@@ -54,69 +54,69 @@ def test_values2params(objfunmem):
         'a': 0, 'b': 1, 'c': 2}
 
 
-def test_empty_simulations(objfunmem):
-    sims = objfunmem.simulations
-    assert sims == []
+def test_empty_scenarios(objfunmem):
+    scenarios = objfunmem.scenarios
+    assert scenarios == []
 
 
-def test_select_simulation_nocreate(objfunmem):
+def test_select_scenario_nocreate(objfunmem):
     with pytest.raises(LookupError):
-        objfunmem._select_simulation('not_here', create=False)
+        objfunmem._select_scenario('not_here', create=False)
 
 
-def test_select_simulation(objfunmem):
-    name = 'simulation'
-    sim = objfunmem._select_simulation(name)
-    assert sim.name == name
-    assert name in objfunmem.simulations
+def test_select_scenario(objfunmem):
+    name = 'scenario'
+    scenario = objfunmem._select_scenario(name)
+    assert scenario.name == name
+    assert name in objfunmem.scenarios
 
 
-def test_getSimulation_nocreate(objfunmem):
+def test_getScenario_nocreate(objfunmem):
     with pytest.raises(LookupError):
-        objfunmem.getSimulation('not_here')
+        objfunmem.getScenario('not_here')
 
 
-def test_getSimulation_fail(objfunmem):
+def test_getScenario_fail(objfunmem):
     with pytest.raises(RuntimeError):
-        objfunmem.getSimulation()
+        objfunmem.getScenario()
 
 
-def test_getSimulation_create(objfunmem):
-    name = 'simulation'
-    sim = objfunmem._select_simulation(name)
-    assert sim.name == name
-    assert name in objfunmem.simulations
+def test_getScenario_create(objfunmem):
+    name = 'scenario'
+    scenario = objfunmem._select_scenario(name)
+    assert scenario.name == name
+    assert name in objfunmem.scenarios
 
 
-def test_setDefaultSimulation(objfunmem):
-    name = 'simulation'
-    objfunmem.setDefaultSimulation(name)
-    assert objfunmem._simulation.name == name
-    assert name in objfunmem.simulations
+def test_setDefaultScenario(objfunmem):
+    name = 'scenario'
+    objfunmem.setDefaultScenario(name)
+    assert objfunmem._scenario.name == name
+    assert name in objfunmem.scenarios
 
 
 @pytest.fixture
-def objfunmem_sim(paramsA):
+def objfunmem_scenario(paramsA):
     return DummyObjectiveFunction("study", "", paramsA,
-                                  db='sqlite://', simulation='sim')
+                                  db='sqlite://', scenario='scenario')
 
 
-def test_objfun_with_sim(objfunmem_sim):
-    name = 'sim'
-    assert objfunmem_sim._simulation.name == name
-    assert name in objfunmem_sim.simulations
+def test_objfun_with_scenario(objfunmem_scenario):
+    name = 'scenario'
+    assert objfunmem_scenario._scenario.name == name
+    assert name in objfunmem_scenario.scenarios
 
 
-def test_objfun_get_default_sim(objfunmem_sim):
-    name = 'sim'
-    sim = objfunmem_sim.getSimulation()
-    assert sim.name == name
-    assert name in objfunmem_sim.simulations
+def test_objfun_get_default_scenario(objfunmem_scenario):
+    name = 'scenario'
+    scenario = objfunmem_scenario.getScenario()
+    assert scenario.name == name
+    assert name in objfunmem_scenario.scenarios
 
 
-def test_get_new_none(objfunmem_sim):
+def test_get_new_none(objfunmem_scenario):
     with pytest.raises(RuntimeError):
-        objfunmem_sim.get_new()
+        objfunmem_scenario.get_new()
 
 
 class TestObjectiveFunction:
@@ -126,7 +126,7 @@ class TestObjectiveFunction:
 
     @pytest.fixture
     def objectiveA(self, objfun, rundir, paramsA):
-        return objfun("study", rundir, paramsA, simulation="sim")
+        return objfun("study", rundir, paramsA, scenario="scenario")
 
     def test_objective_function_read(self, objfun, objectiveA, paramsA):
         o = objectiveA
