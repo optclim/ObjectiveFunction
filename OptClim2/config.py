@@ -25,6 +25,7 @@ class OptclimConfig:
       simulation = string() # the name of the simulation
       basedir = string() # the base directory
       objfun = string(default=misfit)
+      db = string(default=None) # SQLAlchemy DB connection string
 
     [parameters]
       [[float_parameters]]
@@ -183,7 +184,8 @@ class OptclimConfig:
                 raise RuntimeError(msg)
             self._objfun = objfun(self.study, self.basedir,
                                   self.optimise_parameters,
-                                  simulation=self.simulation)
+                                  simulation=self.simulation,
+                                  db=self.cfg['setup']['db'])
         return self._objfun
 
 

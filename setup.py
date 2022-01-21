@@ -40,6 +40,7 @@ setup(
     },
     entry_points={
         'console_scripts': [
+            'optclim2-create-db = OptClim2.createdb:main',
             'optclim2-nlopt = OptClim2.optimise:main',
             'optclim2-dfols = OptClim2.dfols:main',
             'optclim2-example-model = OptClim2.example:main',
