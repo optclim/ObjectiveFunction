@@ -1,6 +1,7 @@
 name: optclim
 dependencies:
   - python=3.8
+  - pip
   - cylc-flow
   - nlopt
   - configobj
