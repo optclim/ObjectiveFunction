@@ -25,17 +25,21 @@ class ObjectiveFunctionResidual(ObjectiveFunction):
     :type scenario: str
     :param db: database connection string
     :type db: str
+    :param prelim: when True failed parameter look up raises a
+                   OptClimPreliminaryRun exception otherwise a
+                   OptClimNewRun exception is raised. Default=True
+    :type prelim: bool
     """
 
     _Run = DBRunPath
 
     def __init__(self, study: str, basedir: Path,  # noqa C901
                  parameters: Mapping[str, Parameter],
-                 scenario=None, db=None):
+                 scenario=None, db=None, prelim=True):
         """constructor"""
 
         super().__init__(study, basedir, parameters,
-                         scenario=scenario, db=db)
+                         scenario=scenario, db=db, prelim=prelim)
 
         self._num_residuals = None
 

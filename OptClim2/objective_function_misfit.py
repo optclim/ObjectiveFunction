@@ -21,6 +21,10 @@ class ObjectiveFunctionMisfit(ObjectiveFunction):
     :type scenario: str
     :param db: database connection string
     :type db: str
+    :param prelim: when True failed parameter look up raises a
+                   OptClimPreliminaryRun exception otherwise a
+                   OptClimNewRun exception is raised. Default=True
+    :type prelim: bool
     """
 
     _Run = DBRunMisfit

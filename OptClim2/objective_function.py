@@ -42,13 +42,17 @@ class ObjectiveFunction(metaclass=ABCMeta):
     :type scenario: str
     :param db: database connection string
     :type db: str
+    :param prelim: when True failed parameter look up raises a
+                   OptClimPreliminaryRun exception otherwise a
+                   OptClimNewRun exception is raised. Default=True
+    :type prelim: bool
     """
 
     _Run = DBRun
 
     def __init__(self, study: str, basedir: Path,  # noqa C901
                  parameters: Mapping[str, Parameter],
-                 scenario=None, db=None):
+                 scenario=None, db=None, prelim=True):
         """constructor"""
 
         if len(parameters) == 0:
@@ -59,6 +63,7 @@ class ObjectiveFunction(metaclass=ABCMeta):
         self._log = logging.getLogger(f'OptClim2.{self.__class__.__name__}')
         self._basedir = basedir
         self._session = None
+        self._prelim = prelim
 
         if db is None:
             dbName = 'sqlite:///' + str(basedir / 'objective_function.sqlite')
@@ -115,6 +120,10 @@ class ObjectiveFunction(metaclass=ABCMeta):
     @property
     def session(self):
         return self._session
+
+    @property
+    def prelim(self):
+        return self._prelim
 
     @property
     def study(self):
@@ -313,9 +322,14 @@ class ObjectiveFunction(metaclass=ABCMeta):
             # create a new entry
             self._log.info('new provisional parameter set')
             run = self._Run(s, parameters)
-            run.state = LookupState.PROVISIONAL
-            self.session.commit()
-            raise OptClimPreliminaryRun
+            if self.prelim:
+                run.state = LookupState.PROVISIONAL
+                self.session.commit()
+                raise OptClimPreliminaryRun
+            else:
+                run.state = LookupState.NEW
+                self.session.commit()
+                raise OptClimNewRun
 
         if run.state == LookupState.PROVISIONAL:
             self._log.info('provisional parameter set changed to new')

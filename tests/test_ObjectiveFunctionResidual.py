@@ -64,3 +64,37 @@ class TestObjectiveFunctionResidual(TOFM):
         objectiveAvA.set_result(valuesA, resultA)
         assert numpy.all(
             objectiveAvA(list(valuesA.values()), numpy.array([])) == resultA)
+
+
+class TestObjectiveFunctionResidualPrelim(TestObjectiveFunctionResidual):
+    @pytest.fixture
+    def objectiveA(self, objfun, rundir, paramsA):
+        return objfun("study", rundir, paramsA,
+                      scenario="scenario", prelim=False)
+
+    @pytest.fixture
+    def objectiveAvA(self, objectiveA, valuesA):
+        o = objectiveA
+        try:
+            o.get_result(valuesA)
+        except OptClimNewRun:
+            pass
+        return o
+
+    def test_lookup_parameters_two(self, objectiveA, valuesA, resultA):
+        # test what happens when we insert a new value
+
+        # a first lookup of the parameter should get a new exception
+        with pytest.raises(OptClimNewRun):
+            objectiveA.get_result(valuesA)
+        # the state should be new now
+        assert objectiveA.state(valuesA) == LookupState.NEW
+        # should succeed but return a random value
+        r = objectiveA.get_result(valuesA)
+        assert isinstance(r, numpy.ndarray)
+        if r.size == resultA.size:
+            assert numpy.all(r != resultA)
+        # attempting to set result should fail because
+        # parameter set is in wrong state ('n')
+        with pytest.raises(RuntimeError):
+            objectiveA.set_result(valuesA, resultA)
