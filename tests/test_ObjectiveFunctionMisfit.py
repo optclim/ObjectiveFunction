@@ -36,7 +36,7 @@ class TestObjectiveFunctionMisfit(TOF):
             pass
         return o
 
-    def test_empty_lookup(self, objectiveA, valuesA):
+    def test_empty_lookup(self, objectiveA, valuesA, resultA):
         # these should all fail because the param set is missing
         with pytest.raises(LookupError):
             objectiveA.state(valuesA)
