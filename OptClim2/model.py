@@ -17,12 +17,27 @@ class DBStudy(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String, unique=True)
 
+    obsnames = relationship("DBObsName", order_by="DBObsName.name",
+                            back_populates="study")
     parameters = relationship("DBParameter", order_by="DBParameter.name",
                               back_populates="study")
     scenarios = relationship("DBScenario", back_populates="study")
 
     def __repr__(self):
         return f"<DBStudy(name={self.name})>"
+
+
+class DBObsName(Base):
+    __tablename__ = 'obsnames'
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String)
+    study_id = Column(Integer, ForeignKey('studies.id'))
+
+    study = relationship("DBStudy", back_populates="obsnames")
+
+    __table_args__ = (
+        UniqueConstraint('name', 'study_id', name='_unique_params'), )
 
 
 class DBParameter(Base):

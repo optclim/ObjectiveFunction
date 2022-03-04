@@ -82,6 +82,7 @@ class ObjectiveFunction(metaclass=ABCMeta):
             for p in self.parameters:
                 getDBParameter(self._study, p, self.parameters[p])
             self.session.commit()
+            self._is_new = True
         else:
             self._log.debug(f'loading study {study}')
             error = False
@@ -104,6 +105,7 @@ class ObjectiveFunction(metaclass=ABCMeta):
                         error = True
             if error:
                 raise RuntimeError('configuration does not match database')
+            self._is_new = False
 
         self._lb = None
         self._ub = None

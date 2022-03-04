@@ -44,6 +44,9 @@ class OptclimConfig:
           constant = boolean(default=False) # if set to True the parameter is
                                             # not optimised for
 
+
+    [targets]
+      __many__ = float
     """
 
     def __init__(self, fname: Path) -> None:
@@ -70,6 +73,7 @@ class OptclimConfig:
         self._optimise_params = None
         self._values = None
         self._objfun = None
+        self._obsNames = None
 
         res = self._cfg.validate(validator, preserve_errors=True)
         errors = []
@@ -187,6 +191,17 @@ class OptclimConfig:
                                   scenario=self.scenario,
                                   db=self.cfg['setup']['db'])
         return self._objfun
+
+    @property
+    def observationNames(self):
+        """the name of the observations"""
+        if self._obsNames is None:
+            self._obsNames = sorted(list(self.cfg['targets'].keys()))
+        return self._obsNames
+
+    @property
+    def targets(self):
+        return self.cfg['targets']
 
 
 if __name__ == '__main__':
