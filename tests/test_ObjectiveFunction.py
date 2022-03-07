@@ -139,7 +139,7 @@ class TestObjectiveFunction:
                                  (-5, 0, 1e-7)])
     def test_objective_function_read_fail_wrong_values(
             self, objfun, objectiveA, paramsB, minv, maxv, resolution):
-        paramsB['c'] = ParameterFloat(minv, maxv, resolution=resolution)
+        paramsB['c'] = ParameterFloat(minv, minv, maxv, resolution=resolution)
         o = objectiveA
         with pytest.raises(RuntimeError):
             objfun("study", o.basedir, paramsB)
@@ -154,7 +154,7 @@ class TestObjectiveFunction:
     def test_objective_function_read_fail_db(
             self, objfun, objectiveA, paramsA):
         o = objectiveA
-        paramsA['d'] = ParameterFloat(10, 20)
+        paramsA['d'] = ParameterFloat(15, 10, 20)
         # wrong number of parameters in db
         with pytest.raises(RuntimeError):
             objfun("study", o.basedir, paramsA)

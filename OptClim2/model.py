@@ -77,7 +77,7 @@ class DBParameterInt(DBParameter):
 
     @property
     def param(self):
-        return ParameterInt(minv=self.minv, maxv=self.maxv)
+        return ParameterInt(self.minv, minv=self.minv, maxv=self.maxv)
 
     @classmethod
     def from_param(cls, study, name, parameter):
@@ -102,7 +102,7 @@ class DBParameterFloat(DBParameter):
 
     @property
     def param(self):
-        return ParameterFloat(minv=self.minv, maxv=self.maxv,
+        return ParameterFloat(self.minv, minv=self.minv, maxv=self.maxv,
                               resolution=self.resolution)
 
     @classmethod

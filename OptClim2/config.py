@@ -106,7 +106,7 @@ class OptclimConfig:
 
         for t in PARAMS:
             for p in self.cfg['parameters'][t]:
-                self._values[p] = self.cfg['parameters'][t][p]['value']
+                value = self.cfg['parameters'][t][p]['value']
                 minv = self.cfg['parameters'][t][p]['min']
                 maxv = self.cfg['parameters'][t][p]['max']
                 extra = {}
@@ -115,11 +115,12 @@ class OptclimConfig:
                     extra['resolution'] = \
                         self.cfg['parameters'][t][p]['resolution']
                 try:
-                    self._params[p] = PARAMS[t](minv, maxv, **extra)
+                    self._params[p] = PARAMS[t](value, minv, maxv, **extra)
                 except Exception as e:
                     msg = f'problem with parameter {p}: {e}'
                     self._log.error(msg)
                     raise RuntimeError(msg)
+                self._values[p] = self.cfg['parameters'][t][p]['value']
 
     @property
     def cfg(self):
