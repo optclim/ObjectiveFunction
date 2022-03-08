@@ -6,9 +6,11 @@ from validate import Validator
 from pathlib import Path
 from os.path import expandvars
 from io import StringIO
+from functools import partial
 
 from .objective_function_misfit import ObjectiveFunctionMisfit
 from .objective_function_residual import ObjectiveFunctionResidual
+from .objective_function_simobs import ObjectiveFunctionSimObs
 from .parameter import ParameterFloat, ParameterInt
 
 
@@ -183,12 +185,19 @@ class OptclimConfig:
                 objfun = ObjectiveFunctionMisfit
             elif self.objfunType == 'residual':
                 objfun = ObjectiveFunctionResidual
+            elif self.objfunType == 'simobs':
+                if len(self.targets) == 0:
+                    msg = 'targets required for simobs'
+                    self._log.error(msg)
+                    raise RuntimeError(msg)
+                objfun = partial(ObjectiveFunctionSimObs,
+                                 observationNames=self.observationNames)
             else:
                 msg = 'wrong type of objective function: ' + self.objfunType
                 self._log.error(msg)
                 raise RuntimeError(msg)
             self._objfun = objfun(self.study, self.basedir,
-                                  self.optimise_parameters,
+                                  self.parameters,
                                   scenario=self.scenario,
                                   db=self.cfg['setup']['db'])
         return self._objfun

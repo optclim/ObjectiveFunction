@@ -13,8 +13,8 @@ class DFOLSOptClimConfig(OptclimConfig):
     def __init__(self, fname: Path) -> None:
         super().__init__(fname)
         self._log = logging.getLogger('OptClim2.dfolscfg')
-        if self.objfunType != 'residual':
-            msg = 'objective function type must be residual'
+        if self.objfunType not in ['residual', 'simobs']:
+            msg = 'objective function type must be either residual or simobs'
             self._log.error(msg)
             raise RuntimeError(msg)
 
