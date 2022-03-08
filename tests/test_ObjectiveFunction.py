@@ -24,6 +24,11 @@ def objfunmem(paramsA):
     return DummyObjectiveFunction("study", "", paramsA, db='sqlite://')
 
 
+@pytest.fixture
+def objfunmem_const(paramsC):
+    return DummyObjectiveFunction("study", "", paramsC, db='sqlite://')
+
+
 def test_study_name(objfunmem):
     assert objfunmem.study == "study"
 
@@ -43,15 +48,59 @@ def test_upper_bounds(objfunmem):
 
 
 def test_values2params_fail(objfunmem):
-    with pytest.raises(AssertionError):
+    with pytest.raises(RuntimeError):
         objfunmem.values2params((0, 1))
-    with pytest.raises(AssertionError):
+    with pytest.raises(RuntimeError):
         objfunmem.values2params((0, 1, 3, 4))
 
 
 def test_values2params(objfunmem):
     assert objfunmem.values2params((0, 1, 2)) == {
         'a': 0, 'b': 1, 'c': 2}
+
+
+def test_params2values(objfunmem):
+    assert numpy.all(
+        objfunmem.params2values({'a': 0, 'b': 1, 'c': 2}) == (0, 1, 2))
+
+
+def test_parameters(objfunmem):
+    assert list(objfunmem.parameters.keys()) == ['a', 'b', 'c']
+
+
+def test_active_parameters(objfunmem):
+    assert list(objfunmem.active_parameters.keys()) == ['a', 'b', 'c']
+
+
+def test_constant_parameters(objfunmem):
+    assert len(objfunmem.constant_parameters.keys()) == 0
+
+
+def test_values2params_const(objfunmem_const):
+    assert objfunmem_const.values2params((0, 2)) == {
+        'a': 0, 'b': 1, 'c': 2}
+
+
+def test_params2values_const(objfunmem_const):
+    assert numpy.all(
+        objfunmem_const.params2values({'a': 0, 'c': 2}) == (0, 1, 2))
+
+
+def test_params2values_const_no_const(objfunmem_const):
+    assert numpy.all(
+        objfunmem_const.params2values({'a': 0, 'c': 2}, False) == (0, 2))
+
+
+def test_parameters_const(objfunmem_const):
+    assert list(objfunmem_const.parameters.keys()) == ['a', 'b', 'c']
+
+
+def test_active_parameters_const(objfunmem_const):
+    assert list(objfunmem_const.active_parameters.keys()) == ['a', 'c']
+
+
+def test_constant_parameters_const(objfunmem_const):
+    assert list(objfunmem_const.constant_parameters.keys()) == ['b']
 
 
 def test_empty_scenarios(objfunmem):

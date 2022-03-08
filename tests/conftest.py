@@ -17,6 +17,13 @@ def paramsB():
 
 
 @pytest.fixture
+def paramsC():
+    return {'a': ParameterFloat(0, -1, 1),
+            'b': ParameterFloat(1, 0, 2, 1e-7, constant=True),
+            'c': ParameterFloat(-2.5, -5, 0)}
+
+
+@pytest.fixture
 def valuesA():
     return {'a': 0., 'b': 1., 'c': -2}
 

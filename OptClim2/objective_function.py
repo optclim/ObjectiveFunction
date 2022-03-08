@@ -59,7 +59,17 @@ class ObjectiveFunction(metaclass=ABCMeta):
             raise RuntimeError('no parameters given')
 
         self._parameters = parameters
-        self._paramlist = tuple(sorted(list(parameters.keys())))
+        self._constant_parameters = {}
+        self._active_parameters = {}
+        for p in self.parameters:
+            if self.parameters[p].constant:
+                self._constant_parameters[p] = self.parameters[p]
+            else:
+                self._active_parameters[p] = self.parameters[p]
+        self._paramlist = tuple(
+            sorted(list(self.parameters.keys())))
+        self._active_paramlist = tuple(
+            sorted(list(self.active_parameters.keys())))
         self._log = logging.getLogger(f'OptClim2.{self.__class__.__name__}')
         self._basedir = basedir
         self._session = None
@@ -142,6 +152,16 @@ class ObjectiveFunction(metaclass=ABCMeta):
         """dictionary of parameters"""
         return self._parameters
 
+    @property
+    def active_parameters(self):
+        """the constant parameters"""
+        return self._active_parameters
+
+    @property
+    def constant_parameters(self):
+        """the constant parameters"""
+        return self._constant_parameters
+
     def getLowerBounds(self):
         """an array containing the lower bounds"""
         if self._lb is None:
@@ -175,20 +195,33 @@ class ObjectiveFunction(metaclass=ABCMeta):
         :param values: a list/tuple of values
         :return: a dictionary of parameters
         """
-        assert len(values) == len(self._paramlist)
         params = {}
-        for i, p in enumerate(self._paramlist):
-            params[p] = values[i]
+        if len(values) == len(self.parameters):
+            for i, p in enumerate(self._paramlist):
+                params[p] = values[i]
+        elif len(values) == len(self.active_parameters):
+            for i, p in enumerate(self._active_paramlist):
+                params[p] = values[i]
+            for p in self.constant_parameters:
+                params[p] = self.constant_parameters[p].value
+        else:
+            raise RuntimeError('Wrong number of parameters')
+
         return params
 
-    def params2values(self, params):
+    def params2values(self, params, include_constant=True):
         """create an array of values from a dictionary of parameters
         :param params: a dictionary of parameters
+        :param include_constant: set to False to exclude constant parameters
         :return: a array of values
         """
         values = []
         for p in self._paramlist:
-            values.append(params[p])
+            if self.parameters[p].constant:
+                if include_constant:
+                    values.append(self.parameters[p].value)
+            else:
+                values.append(params[p])
         return numpy.array(values)
 
     @property
@@ -264,8 +297,12 @@ class ObjectiveFunction(metaclass=ABCMeta):
         # construct query
         query = []
         for p in self.parameters:
+            if self.parameters[p].constant:
+                v = self.parameters[p].value
+            else:
+                v = parameters[p]
             query.append('({}=={})'.format(
-                p, self.parameters[p].transform(parameters[p])))
+                p, self.parameters[p].transform(v)))
         query = ' & '.join(query)
         runid = dbParams.query(query)
 
