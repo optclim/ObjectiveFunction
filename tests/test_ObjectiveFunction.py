@@ -37,6 +37,18 @@ def test_num_params(objfunmem):
     assert objfunmem.num_params == 3
 
 
+def test_num_params_const(objfunmem_const):
+    assert objfunmem_const.num_params == 3
+
+
+def test_num_active_params(objfunmem):
+    assert objfunmem.num_active_params == 3
+
+
+def test_num_active_params_const(objfunmem_const):
+    assert objfunmem_const.num_active_params == 2
+
+
 def test_lower_bounds(objfunmem):
     assert numpy.all(
         objfunmem.lower_bounds == numpy.array((-1, 0, -5)))
@@ -45,6 +57,16 @@ def test_lower_bounds(objfunmem):
 def test_upper_bounds(objfunmem):
     assert numpy.all(
         objfunmem.upper_bounds == numpy.array((1, 2, 0)))
+
+
+def test_lower_bounds_const(objfunmem_const):
+    assert numpy.all(
+        objfunmem_const.lower_bounds == numpy.array((-1, -5)))
+
+
+def test_upper_bounds_const(objfunmem_const):
+    assert numpy.all(
+        objfunmem_const.upper_bounds == numpy.array((1, 0)))
 
 
 def test_values2params_fail(objfunmem):

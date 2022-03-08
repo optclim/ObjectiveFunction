@@ -33,7 +33,8 @@ class NLOptClimConfig(OptclimConfig):
                     self.cfg['nlopt']['algorithm'])
                 self._log.error(e)
                 raise RuntimeError(e)
-            self._opt = nlopt.opt(alg, self.objectiveFunction.num_params)
+            self._opt = nlopt.opt(
+                alg, self.objectiveFunction.num_active_params)
             self._opt.set_lower_bounds(self.objectiveFunction.lower_bounds)
             self._opt.set_upper_bounds(self.objectiveFunction.upper_bounds)
             self._opt.set_min_objective(self.objectiveFunction)
@@ -59,7 +60,8 @@ def main():
         # start with lower bounds
         try:
             x = opt.optimize(
-                cfg.objectiveFunction.params2values(cfg.values))
+                cfg.objectiveFunction.params2values(cfg.values,
+                                                    include_constant=False))
         except OptClimPreliminaryRun:
             log.info('new parameter set')
             continue

@@ -148,6 +148,11 @@ class ObjectiveFunction(metaclass=ABCMeta):
         return len(self._parameters)
 
     @property
+    def num_active_params(self):
+        """the number of parameters"""
+        return len(self._active_parameters)
+
+    @property
     def parameters(self):
         """dictionary of parameters"""
         return self._parameters
@@ -166,7 +171,7 @@ class ObjectiveFunction(metaclass=ABCMeta):
         """an array containing the lower bounds"""
         if self._lb is None:
             self._lb = []
-            for p in self._paramlist:
+            for p in self._active_paramlist:
                 self._lb.append(self.parameters[p].minv)
             self._lb = numpy.array(self._lb)
         return self._lb
@@ -175,7 +180,7 @@ class ObjectiveFunction(metaclass=ABCMeta):
         """an array containing the upper bounds"""
         if self._ub is None:
             self._ub = []
-            for p in self._paramlist:
+            for p in self._active_paramlist:
                 self._ub.append(self.parameters[p].maxv)
             self._ub = numpy.array(self._ub)
         return self._ub
