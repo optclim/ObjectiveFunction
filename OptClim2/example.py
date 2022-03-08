@@ -52,6 +52,8 @@ def main():
 
     dname = cfg.basedir / 'synthetic.data'
     if args.generate:
+        if cfg.objfunType == 'simobs':
+            parser.error('no need to generate data for simobs example')
         logging.info('generating synthetic data')
         # create a random parameter set
         params = {}
@@ -85,21 +87,26 @@ def main():
             logging.error(e)
             sys.exit(1)
 
-        data = pandas.read_csv(dname, names=['x', 'y', 'z'])
+        if cfg.objfunType == 'simobs':
+            result = {}
+            for i, n in enumerate(cfg.observationNames):
+                result[n] = model(i * 5, 0, params) - cfg.targets[n]
+        else:
+            data = pandas.read_csv(dname, names=['x', 'y', 'z'])
 
-        # compute model values for parameter
-        data['computed'] = data.apply(lambda row:
-                                      model(row['x'], row['y'], params),
-                                      axis=1)
+            # compute model values for parameter
+            data['computed'] = data.apply(lambda row:
+                                          model(row['x'], row['y'], params),
+                                          axis=1)
 
-        # compute difference between observation and model
-        data['diff'] = data['computed'] - data['z']
+            # compute difference between observation and model
+            data['diff'] = data['computed'] - data['z']
 
-        if cfg.objfunType == 'misfit':
-            # and standard devation
-            result = data['diff'].std()
-        elif cfg.objfunType == 'residual':
-            result = data['diff'].to_numpy()
+            if cfg.objfunType == 'misfit':
+                # and standard devation
+                result = data['diff'].std()
+            elif cfg.objfunType == 'residual':
+                result = data['diff'].to_numpy()
 
         if args.delay > 0:
             logging.info(f'waiting {args.delay} seconds')
