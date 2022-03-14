@@ -12,7 +12,7 @@ from .common import OptClimPreliminaryRun, OptClimNewRun, OptClimWaiting
 class DFOLSOptClimConfig(OptclimConfig):
     def __init__(self, fname: Path) -> None:
         super().__init__(fname)
-        self._log = logging.getLogger('OptClim2.dfolscfg')
+        self._log = logging.getLogger('ObjectiveFunction.dfolscfg')
         if self.objfunType not in ['residual', 'simobs']:
             msg = 'objective function type must be either residual or simobs'
             self._log.error(msg)
@@ -21,7 +21,7 @@ class DFOLSOptClimConfig(OptclimConfig):
 
 def main():
     logging.basicConfig(level=logging.INFO)
-    log = logging.getLogger('OptClim2.dfols')
+    log = logging.getLogger('ObjectiveFunction.dfols')
 
     parser = argparse.ArgumentParser()
     parser.add_argument('config', type=Path,

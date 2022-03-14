@@ -8,10 +8,10 @@ if [ -n "$1" ]; then
 fi
 
 echo "using optimiser $OPTIMISER"
-optscript=optclim2-dfols
+optscript=objfun-dfols
 optcfg=example-dfols.cfg
 if [ $OPTIMISER = 'nlopt' ]; then
-    optscript=optclim2-nlopt
+    optscript=objfun-nlopt
     optcfg=example-nlopt.cfg
 elif [ $OPTIMISER = 'simobs' ]; then
     optcfg=example-simobs.cfg
@@ -21,7 +21,7 @@ rm -rf $CYLC_WORKFLOW_WORK_DIR
 
 if [ $OPTIMISER != 'simobs' ]; then
     # generate synthetic data
-    optclim2-example-model $optcfg -g
+    objfun-example-model $optcfg -g
 fi
 
 while /bin/true
@@ -38,7 +38,7 @@ do
 	$optscript $optcfg
 	res=$?
     done
-    while optclim2-example-model $optcfg
+    while objfun-example-model $optcfg
     do
 	echo 'fwd'
     done

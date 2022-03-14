@@ -1,6 +1,6 @@
 import pytest
 
-from OptClim2 import ParameterFloat, ParameterInt
+from ObjectiveFunction import ParameterFloat, ParameterInt
 
 
 @pytest.fixture

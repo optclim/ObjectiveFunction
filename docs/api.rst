@@ -1,5 +1,5 @@
-OptClim2 API
-===================
-.. automodule:: OptClim2
+ObjectiveFunction API
+=====================
+.. automodule:: ObjectiveFunction
    :imported-members:
    :members:

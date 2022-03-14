@@ -8,9 +8,9 @@ authors:
   given-names: "Michael"
 - family-names: "Tett"
   given-names: "Simon"
-title: "OptClim2"
+title: "ObjectiveFunction"
 version: 0.1.0
-url: https://github.com/optclim/OptClim2
+url: https://github.com/optclim/ObjectiveFunction
 references:
  - authors:
    - family-names: "Gorman"

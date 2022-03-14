@@ -1,5 +1,5 @@
 import pytest
-from OptClim2 import ParameterInt
+from ObjectiveFunction import ParameterInt
 
 
 def test_parameter_bad_type():

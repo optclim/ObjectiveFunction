@@ -70,7 +70,7 @@ class ObjectiveFunction(metaclass=ABCMeta):
             sorted(list(self.parameters.keys())))
         self._active_paramlist = tuple(
             sorted(list(self.active_parameters.keys())))
-        self._log = logging.getLogger(f'OptClim2.{self.__class__.__name__}')
+        self._log = logging.getLogger(f'ObjectiveFunction.{self.__class__.__name__}')
         self._basedir = basedir
         self._session = None
         self._prelim = prelim
@@ -435,7 +435,7 @@ class ObjectiveFunction(metaclass=ABCMeta):
         """
         if grad.size > 0:
             raise RuntimeError(
-                'OptClim2 only supports derivative free optimisations')
+                'ObjectiveFunction only supports derivative free optimisations')
         return self.get_result(self.values2params(x))
 
 

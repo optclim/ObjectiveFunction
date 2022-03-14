@@ -1,4 +1,4 @@
-name: optclim
+name: objectivefunction
 dependencies:
   - python=3.8
   - pip

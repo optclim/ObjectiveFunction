@@ -1,10 +1,10 @@
 import pytest
 import numpy
 
-from OptClim2 import ObjectiveFunctionMisfit
+from ObjectiveFunction import ObjectiveFunctionMisfit
 from test_ObjectiveFunction import TestObjectiveFunction as TOF
-from OptClim2 import LookupState
-from OptClim2 import OptClimPreliminaryRun, OptClimNewRun
+from ObjectiveFunction import LookupState
+from ObjectiveFunction import OptClimPreliminaryRun, OptClimNewRun
 
 
 @pytest.fixture

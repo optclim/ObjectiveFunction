@@ -1,5 +1,5 @@
 import pytest
-from OptClim2 import ParameterFloat
+from ObjectiveFunction import ParameterFloat
 
 
 def test_parameter_bad_range():

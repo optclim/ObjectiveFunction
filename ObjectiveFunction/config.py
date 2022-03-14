@@ -52,7 +52,7 @@ class OptclimConfig:
     """
 
     def __init__(self, fname: Path) -> None:
-        self._log = logging.getLogger('OptClim2.config')
+        self._log = logging.getLogger('ObjectiveFunction.config')
 
         if not fname.is_file():
             msg = f'no such configuration file {fname}'

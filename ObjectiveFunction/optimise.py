@@ -20,7 +20,7 @@ class NLOptClimConfig(OptclimConfig):
 
     def __init__(self, fname: Path) -> None:
         super().__init__(fname)
-        self._log = logging.getLogger('OptClim2.optimisecfg')
+        self._log = logging.getLogger('ObjectiveFunction.optimisecfg')
         self._opt = None
 
     @property
@@ -45,7 +45,7 @@ class NLOptClimConfig(OptclimConfig):
 
 def main():
     logging.basicConfig(level=logging.INFO)
-    log = logging.getLogger('OptClim2.optimise')
+    log = logging.getLogger('ObjectiveFunction.optimise')
 
     parser = argparse.ArgumentParser()
     parser.add_argument('config', type=Path,

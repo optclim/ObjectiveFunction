@@ -17,14 +17,14 @@
      [[[environment]]]
      CFG = $CYLC_WORKFLOW_RUN_DIR/example-nlopt.cfg
   [[setup]]
-  script = optclim2-example-model -g $CFG
+  script = objfun-example-model -g $CFG
 
   [[forward]]
-  script = optclim2-example-model -d 10 $CFG
+  script = objfun-example-model -d 10 $CFG
 
   [[optimise]]
   script = """
-  status=$(optclim2-nlopt $CFG || true)
+  status=$(objfun-nlopt $CFG || true)
   cylc message -- "${CYLC_SUITE_NAME}" "${CYLC_TASK_JOB}" $status
   """
      [[[outputs]]]

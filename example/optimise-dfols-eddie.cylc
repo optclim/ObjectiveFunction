@@ -22,12 +22,12 @@
      CFG = $CYLC_WORKFLOW_RUN_DIR/example-dfols.cfg
   [[setup]]
   script = """
-  optclim2-example-model -g $CFG
+  objfun-example-model -g $CFG
   """
 
   [[forward]]
   platform = eddie
-  script = optclim2-example-model -d 30 $CFG
+  script = objfun-example-model -d 30 $CFG
      [[[directives]]]
        -l h_rt=00:05:00 
        -l h_vmem=1G
@@ -35,7 +35,7 @@
 
   [[optimise]]
   script = """
-  status=$(optclim2-dfols $CFG || true)
+  status=$(objfun-dfols $CFG || true)
   cylc message -- "${CYLC_SUITE_NAME}" "${CYLC_TASK_JOB}" $status
 
   """

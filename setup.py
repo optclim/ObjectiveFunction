@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 from sphinx.setup_command import BuildDoc
 
-name = 'OptClim2'
+name = 'ObjectiveFunction'
 version = '0.1'
 release = '0.1.0'
 author = 'Magnus Hagdorn'
@@ -40,12 +40,12 @@ setup(
     },
     entry_points={
         'console_scripts': [
-            'optclim2-create-db = OptClim2.createdb:main',
-            'optclim2-nlopt = OptClim2.optimise:main',
-            'optclim2-dfols = OptClim2.dfols:main',
-            'optclim2-example-model = OptClim2.example:main',
+            'objfun-create-db = ObjectiveFunction.createdb:main',
+            'objfun-nlopt = ObjectiveFunction.optimise:main',
+            'objfun-dfols = ObjectiveFunction.dfols:main',
+            'objfun-example-model = ObjectiveFunction.example:main',
         ],
     },
     author=author,
-    description="OptClim2 optimisation framework for cylc workflows",
+    description="ObjectiveFunction optimisation framework for cylc workflows",
 )

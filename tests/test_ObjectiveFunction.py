@@ -1,8 +1,8 @@
 import pytest
 import numpy
 
-from OptClim2 import ObjectiveFunction
-from OptClim2 import ParameterFloat
+from ObjectiveFunction import ObjectiveFunction
+from ObjectiveFunction import ParameterFloat
 
 
 class DummyObjectiveFunction(ObjectiveFunction):

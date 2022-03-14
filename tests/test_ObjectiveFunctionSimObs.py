@@ -2,9 +2,9 @@ import pytest
 import pandas
 import numpy
 
-from OptClim2 import ObjectiveFunctionSimObs
-from OptClim2 import LookupState
-from OptClim2 import OptClimNewRun
+from ObjectiveFunction import ObjectiveFunctionSimObs
+from ObjectiveFunction import LookupState
+from ObjectiveFunction import OptClimNewRun
 
 from test_ObjectiveFunctionResidual import TestObjectiveFunctionResidual as \
     TOFR
