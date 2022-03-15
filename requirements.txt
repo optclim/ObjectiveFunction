@@ -2,3 +2,4 @@ nlopt
 configobj
 pandas
 pytest
+sqlalchemy
