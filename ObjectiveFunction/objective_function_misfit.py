@@ -22,8 +22,8 @@ class ObjectiveFunctionMisfit(ObjectiveFunction):
     :param db: database connection string
     :type db: str
     :param prelim: when True failed parameter look up raises a
-                   OptClimPreliminaryRun exception otherwise a
-                   OptClimNewRun exception is raised. Default=True
+                   PreliminaryRun exception otherwise a
+                   NewRun exception is raised. Default=True
     :type prelim: bool
     """
 
@@ -34,8 +34,8 @@ class ObjectiveFunctionMisfit(ObjectiveFunction):
 
         :param parms: dictionary containing parameter values
         :param scenario: the name of the scenario
-        :raises OptClimNewRun: when lookup fails
-        :raises OptClimWaiting: when completed entries are required
+        :raises NewRun: when lookup fails
+        :raises Waiting: when completed entries are required
         :return: returns the value if lookup succeeds and state is completed
                  return a random value otherwise
         :rtype: float

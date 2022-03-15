@@ -5,7 +5,7 @@ import sys
 import logging
 
 from .config import OptclimConfig
-from .common import OptClimPreliminaryRun, OptClimNewRun, OptClimWaiting
+from .common import PreliminaryRun, NewRun, Waiting
 
 # In case we are using a stochastic method, use a "deterministic"
 # sequence of pseudorandom numbers, to be repeatable:
@@ -62,13 +62,13 @@ def main():
             x = opt.optimize(
                 cfg.objectiveFunction.params2values(cfg.values,
                                                     include_constant=False))
-        except OptClimPreliminaryRun:
+        except PreliminaryRun:
             log.info('new parameter set')
             continue
-        except OptClimNewRun:
+        except NewRun:
             print('new')
             sys.exit(1)
-        except OptClimWaiting:
+        except Waiting:
             print('waiting')
             sys.exit(2)
 

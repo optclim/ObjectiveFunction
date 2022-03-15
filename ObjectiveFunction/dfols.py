@@ -6,7 +6,7 @@ from dfols import solve
 import numpy
 
 from .config import OptclimConfig
-from .common import OptClimPreliminaryRun, OptClimNewRun, OptClimWaiting
+from .common import PreliminaryRun, NewRun, Waiting
 
 
 class DFOLSOptClimConfig(OptclimConfig):
@@ -43,13 +43,13 @@ def main():
                     cfg.objectiveFunction.upper_bounds),
                 scaling_within_bounds=True
             )
-        except OptClimPreliminaryRun:
+        except PreliminaryRun:
             log.info('new parameter set')
             continue
-        except OptClimNewRun:
+        except NewRun:
             print('new')
             sys.exit(1)
-        except OptClimWaiting:
+        except Waiting:
             print('waiting')
             sys.exit(2)
 

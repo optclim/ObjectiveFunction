@@ -4,7 +4,7 @@ import numpy
 from ObjectiveFunction import ObjectiveFunctionResidual
 from test_ObjectiveFunctionMisfit import TestObjectiveFunctionMisfit as TOFM
 from ObjectiveFunction import LookupState
-from ObjectiveFunction import OptClimPreliminaryRun, OptClimNewRun
+from ObjectiveFunction import PreliminaryRun, NewRun
 
 
 @pytest.fixture
@@ -26,13 +26,13 @@ class TestObjectiveFunctionResidual(TOFM):
     def test_lookup_parameters_two(self, objectiveA, valuesA, resultA):
         # test what happens when we insert a new value
 
-        # first time we lookup a parameter should raise OptClimPreliminaryRun
-        with pytest.raises(OptClimPreliminaryRun):
+        # first time we lookup a parameter should raise PreliminaryRun
+        with pytest.raises(PreliminaryRun):
             objectiveA.get_result(valuesA)
         # the state should be provisional now
         assert objectiveA.state(valuesA) == LookupState.PROVISIONAL
         # a second lookup of the same parameter should get a new exception
-        with pytest.raises(OptClimNewRun):
+        with pytest.raises(NewRun):
             objectiveA.get_result(valuesA)
         # the state should be new now
         assert objectiveA.state(valuesA) == LookupState.NEW
@@ -77,7 +77,7 @@ class TestObjectiveFunctionResidualPrelim(TestObjectiveFunctionResidual):
         o = objectiveA
         try:
             o.get_result(valuesA)
-        except OptClimNewRun:
+        except NewRun:
             pass
         return o
 
@@ -85,7 +85,7 @@ class TestObjectiveFunctionResidualPrelim(TestObjectiveFunctionResidual):
         # test what happens when we insert a new value
 
         # a first lookup of the parameter should get a new exception
-        with pytest.raises(OptClimNewRun):
+        with pytest.raises(NewRun):
             objectiveA.get_result(valuesA)
         # the state should be new now
         assert objectiveA.state(valuesA) == LookupState.NEW

@@ -17,15 +17,15 @@ The lookup table is queried using either the :meth:`ObjectiveFunction.ObjectiveF
    * - :meth:`get_result(A) <ObjectiveFunction.ObjectiveFunction.get_result>`
      - N/A
      - PROVISIONAL
-     - raises :exc:`ObjectiveFunction.OptClimPreliminaryRun`
+     - raises :exc:`ObjectiveFunction.PreliminaryRun`
    * - :meth:`get_result(A) <ObjectiveFunction.ObjectiveFunction.get_result>`
      - PROVISIONAL
      - NEW
-     - raises :exc:`ObjectiveFunction.OptClimNewRun`
+     - raises :exc:`ObjectiveFunction.NewRun`
    * - :meth:`get_result(B) <ObjectiveFunction.ObjectiveFunction.get_result>`
      - PROVISIONAL
      - N/A
-     - raises :exc:`ObjectiveFunction.OptClimWaiting`, drops provisional entry
+     - raises :exc:`ObjectiveFunction.Waiting`, drops provisional entry
    * - :meth:`get_result(A) <ObjectiveFunction.ObjectiveFunction.get_result>`
      - NEW
      - NEW
@@ -47,7 +47,7 @@ The lookup table is queried using either the :meth:`ObjectiveFunction.ObjectiveF
      - COMPLETED
      - get parameter set that is in NEW state
 
-The system can automatically determine if models can be run in parallel. When the optimiser is called entries with the NEW or ACTIVE state return a random value. The first time a parameter set, A, lookup fails it is added with the PROVISIONAL state. If when the optimiser is run again the same parameter set A is requested the entry enters the NEW state and a :exc:`ObjectiveFunction.OptClimNewRun` exception is raised. If however a different parameter set B is requested the PROVISIONAL parameter is dropped from the lookup table and a :exc:`ObjectiveFunction.OptClimWaiting` exception is raised. A different parameter set B indicates that the parameter set depends on the not yet know values and the optimiser has to wait until they become available before trying again.
+The system can automatically determine if models can be run in parallel. When the optimiser is called entries with the NEW or ACTIVE state return a random value. The first time a parameter set, A, lookup fails it is added with the PROVISIONAL state. If when the optimiser is run again the same parameter set A is requested the entry enters the NEW state and a :exc:`ObjectiveFunction.NewRun` exception is raised. If however a different parameter set B is requested the PROVISIONAL parameter is dropped from the lookup table and a :exc:`ObjectiveFunction.Waiting` exception is raised. A different parameter set B indicates that the parameter set depends on the not yet know values and the optimiser has to wait until they become available before trying again.
 
 The :meth:`<ObjectiveFunction.ObjectiveFunction.get_new>` method is used to get a parameter set that is in the NEW state. The entry is moved into the ACTIVE state. A :exc:`RuntimeError` exception is raised if there is no parameter set in the NEW state. 
 

@@ -1,21 +1,21 @@
-__all__ = ['OptClimPreliminaryRun', 'OptClimNewRun', 'OptClimWaiting',
+__all__ = ['PreliminaryRun', 'NewRun', 'Waiting',
            'LookupState']
 
 from enum import Enum
 
 
-class OptClimPreliminaryRun(Exception):
+class PreliminaryRun(Exception):
     """Exception used when a preliminary entry in the lookup
     table was created"""
     pass
 
 
-class OptClimNewRun(Exception):
+class NewRun(Exception):
     """Exception used when a new entry in the lookup table was created"""
     pass
 
 
-class OptClimWaiting(Exception):
+class Waiting(Exception):
     """Exception used to indicate that entries need to be completed"""
     pass
 

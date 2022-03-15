@@ -4,7 +4,7 @@ import numpy
 
 from ObjectiveFunction import ObjectiveFunctionSimObs
 from ObjectiveFunction import LookupState
-from ObjectiveFunction import OptClimNewRun
+from ObjectiveFunction import NewRun
 
 from test_ObjectiveFunctionResidual import TestObjectiveFunctionResidual as \
     TOFR
@@ -90,7 +90,7 @@ class TestObjectiveFunctionSimObsPrelim(TestObjectiveFunctionSimObs):
         o = objectiveA
         try:
             o.get_result(valuesA)
-        except OptClimNewRun:
+        except NewRun:
             pass
         return o
 
@@ -98,7 +98,7 @@ class TestObjectiveFunctionSimObsPrelim(TestObjectiveFunctionSimObs):
         # test what happens when we insert a new value
 
         # a first lookup of the parameter should get a new exception
-        with pytest.raises(OptClimNewRun):
+        with pytest.raises(NewRun):
             objectiveA.get_result(valuesA)
         # the state should be new now
         assert objectiveA.state(valuesA) == LookupState.NEW

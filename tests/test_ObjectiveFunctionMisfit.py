@@ -4,7 +4,7 @@ import numpy
 from ObjectiveFunction import ObjectiveFunctionMisfit
 from test_ObjectiveFunction import TestObjectiveFunction as TOF
 from ObjectiveFunction import LookupState
-from ObjectiveFunction import OptClimPreliminaryRun, OptClimNewRun
+from ObjectiveFunction import PreliminaryRun, NewRun
 
 
 @pytest.fixture
@@ -28,11 +28,11 @@ class TestObjectiveFunctionMisfit(TOF):
         o = objectiveA
         try:
             o.get_result(valuesA)
-        except OptClimPreliminaryRun:
+        except PreliminaryRun:
             pass
         try:
             o.get_result(valuesA)
-        except OptClimNewRun:
+        except NewRun:
             pass
         return o
 
@@ -48,13 +48,13 @@ class TestObjectiveFunctionMisfit(TOF):
     def test_lookup_parameters_two(self, objectiveA, valuesA, resultA):
         # test what happens when we insert a new value
 
-        # first time we lookup a parameter should raise OptClimPreliminaryRun
-        with pytest.raises(OptClimPreliminaryRun):
+        # first time we lookup a parameter should raise PreliminaryRun
+        with pytest.raises(PreliminaryRun):
             objectiveA.get_result(valuesA)
         # the state should be provisional now
         assert objectiveA.state(valuesA) == LookupState.PROVISIONAL
         # a second lookup of the same parameter should get a new exception
-        with pytest.raises(OptClimNewRun):
+        with pytest.raises(NewRun):
             objectiveA.get_result(valuesA)
         # the state should be new now
         assert objectiveA.state(valuesA) == LookupState.NEW
@@ -106,7 +106,7 @@ class TestObjectiveFunctionMisfitPrelim(TestObjectiveFunctionMisfit):
         o = objectiveA
         try:
             o.get_result(valuesA)
-        except OptClimNewRun:
+        except NewRun:
             pass
         return o
 
@@ -114,7 +114,7 @@ class TestObjectiveFunctionMisfitPrelim(TestObjectiveFunctionMisfit):
         # test what happens when we insert a new value
 
         # a first lookup of the parameter should get a new exception
-        with pytest.raises(OptClimNewRun):
+        with pytest.raises(NewRun):
             objectiveA.get_result(valuesA)
         # the state should be new now
         assert objectiveA.state(valuesA) == LookupState.NEW

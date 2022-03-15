@@ -11,7 +11,7 @@ from abc import ABCMeta, abstractmethod
 
 from .parameter import Parameter
 from .model import Base, DBStudy, getDBParameter, DBScenario, DBRun
-from .common import OptClimPreliminaryRun, OptClimNewRun, OptClimWaiting
+from .common import PreliminaryRun, NewRun, Waiting
 from .common import LookupState
 
 
@@ -43,8 +43,8 @@ class ObjectiveFunction(metaclass=ABCMeta):
     :param db: database connection string
     :type db: str
     :param prelim: when True failed parameter look up raises a
-                   OptClimPreliminaryRun exception otherwise a
-                   OptClimNewRun exception is raised. Default=True
+                   PreliminaryRun exception otherwise a
+                   NewRun exception is raised. Default=True
     :type prelim: bool
     """
 
@@ -340,8 +340,8 @@ class ObjectiveFunction(metaclass=ABCMeta):
 
         :param parmeters: dictionary containing parameter values
         :param scenario: the name of the scenario
-        :raises OptClimNewRun: when lookup fails
-        :raises OptClimWaiting: when completed entries are required
+        :raises NewRun: when lookup fails
+        :raises Waiting: when completed entries are required
         """
         s = self.getScenario(scenario)
 
@@ -361,7 +361,7 @@ class ObjectiveFunction(metaclass=ABCMeta):
                 self._log.info('remove provisional parameter set')
                 self.session.delete(run)
                 self.session.commit()
-                raise OptClimWaiting
+                raise Waiting
 
             # create a new entry
             self._log.info('new provisional parameter set')
@@ -369,17 +369,17 @@ class ObjectiveFunction(metaclass=ABCMeta):
             if self.prelim:
                 run.state = LookupState.PROVISIONAL
                 self.session.commit()
-                raise OptClimPreliminaryRun
+                raise PreliminaryRun
             else:
                 run.state = LookupState.NEW
                 self.session.commit()
-                raise OptClimNewRun
+                raise NewRun
 
         if run.state == LookupState.PROVISIONAL:
             self._log.info('provisional parameter set changed to new')
             run.state = LookupState.NEW
             self.session.commit()
-            raise OptClimNewRun
+            raise NewRun
         elif run.state == LookupState.COMPLETED:
             self._log.debug('hit completed parameter set')
         else:
@@ -427,8 +427,8 @@ class ObjectiveFunction(metaclass=ABCMeta):
         :param x: vector containing parameter values
         :param grad: vector of length 0
         :type grad: numpy.ndarray
-        :raises OptClimNewRun: when lookup fails
-        :raises OptClimWaiting: when completed entries are required
+        :raises NewRun: when lookup fails
+        :raises Waiting: when completed entries are required
         :return: returns the value if lookup succeeds and state is completed
                  return a random value otherwise
         :rtype: float
