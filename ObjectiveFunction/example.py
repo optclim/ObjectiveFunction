@@ -5,7 +5,7 @@
 # for some parameters a, b, c, d, e, f
 
 
-from .config import OptclimConfig
+from .config import ObjFunConfig
 import argparse
 from pathlib import Path
 import pandas
@@ -48,7 +48,7 @@ def main():
 
     args = parser.parse_args()
 
-    cfg = OptclimConfig(args.config)
+    cfg = ObjFunConfig(args.config)
 
     dname = cfg.basedir / 'synthetic.data'
     if args.generate:

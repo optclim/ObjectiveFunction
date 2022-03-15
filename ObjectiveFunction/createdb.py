@@ -3,7 +3,7 @@ import logging
 from pathlib import Path
 
 from .objective_function import SessionMaker
-from .config import OptclimConfig
+from .config import ObjFunConfig
 
 
 def main():
@@ -14,7 +14,7 @@ def main():
                         help='name of configuration file')
     args = parser.parse_args()
 
-    cfg = OptclimConfig(args.config)
+    cfg = ObjFunConfig(args.config)
     dbName = cfg.cfg['setup']['db']
 
     if dbName is not None:

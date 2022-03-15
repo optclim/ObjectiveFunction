@@ -1,4 +1,4 @@
-__all__ = ['OptclimConfig']
+__all__ = ['ObjFunConfig']
 
 import logging
 from configobj import ConfigObj, flatten_errors
@@ -14,8 +14,8 @@ from .objective_function_simobs import ObjectiveFunctionSimObs
 from .parameter import ParameterFloat, ParameterInt
 
 
-class OptclimConfig:
-    """handle OptClim configuration
+class ObjFunConfig:
+    """handle ObjectiveFunction configuration
 
     :param fname: the name of the configuration file
     :type fname: Path
@@ -65,11 +65,11 @@ class OptclimConfig:
         cfgData = expandvars(cfgData)
 
         # populate the default  config object which is used as a validator
-        optclimDefaults = ConfigObj(self.defaultCfgStr.split('\n'),
-                                    list_values=False, _inspec=True)
+        objfunDefaults = ConfigObj(self.defaultCfgStr.split('\n'),
+                                   list_values=False, _inspec=True)
         validator = Validator()
 
-        self._cfg = ConfigObj(StringIO(cfgData), configspec=optclimDefaults)
+        self._cfg = ConfigObj(StringIO(cfgData), configspec=objfunDefaults)
 
         self._params = None
         self._optimise_params = None
@@ -217,7 +217,7 @@ class OptclimConfig:
 if __name__ == '__main__':
     import sys
     from pprint import pprint
-    cfg = OptclimConfig(Path(sys.argv[1]))
+    cfg = ObjFunConfig(Path(sys.argv[1]))
     pprint(cfg.cfg)
 
     pprint(cfg.parameters)

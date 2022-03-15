@@ -5,11 +5,11 @@ import logging
 from dfols import solve
 import numpy
 
-from .config import OptclimConfig
+from .config import ObjFunConfig
 from .common import PreliminaryRun, NewRun, Waiting
 
 
-class DFOLSOptClimConfig(OptclimConfig):
+class DFOLSConfig(ObjFunConfig):
     def __init__(self, fname: Path) -> None:
         super().__init__(fname)
         self._log = logging.getLogger('ObjectiveFunction.dfolscfg')
@@ -28,7 +28,7 @@ def main():
                         help='name of configuration file')
     args = parser.parse_args()
 
-    cfg = DFOLSOptClimConfig(args.config)
+    cfg = DFOLSConfig(args.config)
 
     # run optimiser twice to detect whether new parameter set is stable
     for i in range(2):

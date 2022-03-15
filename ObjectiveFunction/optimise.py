@@ -4,7 +4,7 @@ import nlopt
 import sys
 import logging
 
-from .config import OptclimConfig
+from .config import ObjFunConfig
 from .common import PreliminaryRun, NewRun, Waiting
 
 # In case we are using a stochastic method, use a "deterministic"
@@ -12,8 +12,8 @@ from .common import PreliminaryRun, NewRun, Waiting
 nlopt.srand(1)
 
 
-class NLOptClimConfig(OptclimConfig):
-    defaultCfgStr = OptclimConfig.defaultCfgStr + """
+class NLConfig(ObjFunConfig):
+    defaultCfgStr = ObjFunConfig.defaultCfgStr + """
     [nlopt]
     algorithm = string()
     """
@@ -52,7 +52,7 @@ def main():
                         help='name of configuration file')
     args = parser.parse_args()
 
-    cfg = NLOptClimConfig(args.config)
+    cfg = NLConfig(args.config)
     opt = cfg.optimiser
 
     # run optimiser twice to detect whether new parameter set is stable
