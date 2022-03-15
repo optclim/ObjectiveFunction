@@ -417,14 +417,31 @@ class ObjectiveFunction(metaclass=ABCMeta):
 
     @abstractmethod
     def get_result(self, params, scenario=None):
+        """look up parameters
+
+        :param parms: dictionary containing parameter values
+        :param scenario: the name of the scenario
+        :raises NewRun: when lookup fails
+        :raises Waiting: when completed entries are required
+        :return: returns the value if lookup succeeds and state is completed
+                 return a random value otherwise
+        """
         pass
 
     @abstractmethod
     def set_result(self, params, result, scenario=None, force=False):
+        """set the result for a paricular parameter set
+
+        :param parms: dictionary of parameters
+        :param result: result value to set
+        :param scenario: the name of the scenario
+        :param force: force setting results irrespective of state
+        """
         pass
 
     def __call__(self, x, grad):
         """look up parameters
+
         :param x: vector containing parameter values
         :param grad: vector of length 0
         :type grad: numpy.ndarray
