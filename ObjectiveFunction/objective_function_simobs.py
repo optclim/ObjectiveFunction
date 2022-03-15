@@ -130,18 +130,19 @@ class ObjectiveFunctionSimObs(ObjectiveFunction):
         else:
             return result.values
 
-    def set_result(self, params, result, scenario=None):
+    def set_result(self, params, result, scenario=None, force=False):
         """set the result for a paricular parameter set
 
         :param parms: dictionary of parameters
         :param result: residuals to store
         :param scenario: the name of the scenario
+        :param force: force setting results irrespective of state
         :type result: numpy.ndarray
         """
         result = self._check_simobs(result)
 
         run = self._getRun(params, scenario=scenario)
-        if run.state == LookupState.ACTIVE:
+        if run.state == LookupState.ACTIVE or force:
             # store residuals in file
             fname = self.basedir / f'simobs_{run.id}.json'
             result.to_json(fname)

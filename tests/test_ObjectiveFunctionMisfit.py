@@ -76,6 +76,13 @@ class TestObjectiveFunctionMisfit(TOF):
         with pytest.raises(RuntimeError):
             objectiveAvA.get_new()
 
+    def test_set_result_force(self, objectiveAvA, valuesA, resultA):
+        objectiveAvA.set_result(valuesA, resultA, force=True)
+        # state should be completed
+        assert objectiveAvA.state(valuesA) == LookupState.COMPLETED
+        # and we should be able to retrieve the value
+        assert objectiveAvA.get_result(valuesA) == resultA
+
     def test_set_result(self, objectiveAvA, valuesA, resultA):
         objectiveAvA.get_new()
         # set the value

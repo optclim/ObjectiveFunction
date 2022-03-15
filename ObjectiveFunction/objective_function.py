@@ -420,7 +420,7 @@ class ObjectiveFunction(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def set_result(self, params, result, scenario=None):
+    def set_result(self, params, result, scenario=None, force=False):
         pass
 
     def __call__(self, x, grad):

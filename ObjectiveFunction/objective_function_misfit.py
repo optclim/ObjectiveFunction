@@ -47,17 +47,18 @@ class ObjectiveFunctionMisfit(ObjectiveFunction):
         else:
             return run.misfit
 
-    def set_result(self, params, result, scenario=None):
+    def set_result(self, params, result, scenario=None, force=False):
         """set the result for a paricular parameter set
 
         :param parms: dictionary of parameters
         :param result: result value to set
         :param scenario: the name of the scenario
+        :param force: force setting results irrespective of state
         :type result: float
         """
 
         run = self._getRun(params, scenario=scenario)
-        if run.state == LookupState.ACTIVE:
+        if run.state == LookupState.ACTIVE or force:
             run.state = LookupState.COMPLETED
             run.misfit = result
             self.session.commit()
