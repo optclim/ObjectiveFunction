@@ -4,7 +4,7 @@ import numpy
 from ObjectiveFunction import ObjectiveFunctionMisfit
 from test_ObjectiveFunction import TestObjectiveFunction as TOF
 from ObjectiveFunction import LookupState
-from ObjectiveFunction import PreliminaryRun, NewRun
+from ObjectiveFunction import PreliminaryRun, NewRun, NoNewRun
 
 
 @pytest.fixture
@@ -42,7 +42,7 @@ class TestObjectiveFunctionMisfit(TOF):
             objectiveA.state(valuesA)
         with pytest.raises(LookupError):
             objectiveA.set_result(valuesA, resultA)
-        with pytest.raises(RuntimeError):
+        with pytest.raises(NoNewRun):
             objectiveA.get_new()
 
     def test_lookup_parameters_two(self, objectiveA, valuesA, resultA):
@@ -73,7 +73,7 @@ class TestObjectiveFunctionMisfit(TOF):
         # the state should be new now
         assert objectiveAvA.state(valuesA) == LookupState.ACTIVE
         # should fail now because if already consumed it
-        with pytest.raises(RuntimeError):
+        with pytest.raises(NoNewRun):
             objectiveAvA.get_new()
 
     def test_set_result_force(self, objectiveAvA, valuesA, resultA):

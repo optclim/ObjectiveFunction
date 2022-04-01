@@ -1,6 +1,7 @@
 import pytest
 import numpy
 
+from ObjectiveFunction import NoNewRun
 from ObjectiveFunction import ObjectiveFunction
 from ObjectiveFunction import ParameterFloat
 
@@ -186,7 +187,7 @@ def test_objfun_get_default_scenario(objfunmem_scenario):
 
 
 def test_get_new_none(objfunmem_scenario):
-    with pytest.raises(RuntimeError):
+    with pytest.raises(NoNewRun):
         objfunmem_scenario.get_new()
 
 

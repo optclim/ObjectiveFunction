@@ -1,4 +1,4 @@
-__all__ = ['PreliminaryRun', 'NewRun', 'Waiting',
+__all__ = ['PreliminaryRun', 'NewRun', 'Waiting', 'NoNewRun',
            'LookupState']
 
 from enum import Enum
@@ -17,6 +17,11 @@ class NewRun(Exception):
 
 class Waiting(Exception):
     """Exception used to indicate that entries need to be completed"""
+    pass
+
+
+class NoNewRun(Exception):
+    """Exception used to indicate that no new runs to be computed"""
     pass
 
 

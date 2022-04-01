@@ -11,7 +11,7 @@ from abc import ABCMeta, abstractmethod
 
 from .parameter import Parameter
 from .model import Base, DBStudy, getDBParameter, DBScenario, DBRun
-from .common import PreliminaryRun, NewRun, Waiting
+from .common import PreliminaryRun, NewRun, Waiting, NoNewRun
 from .common import LookupState
 
 
@@ -396,7 +396,7 @@ class ObjectiveFunction(metaclass=ABCMeta):
         The parameter set changes set from new to active
 
         :return: dictionary of parameter values for which to compute the model
-        :raises RuntimeError: if there is no new parameter set
+        :raises NoNewRun: if there is no new parameter set
         """
 
         s = self.getScenario(scenario)
@@ -407,7 +407,7 @@ class ObjectiveFunction(metaclass=ABCMeta):
                           .with_for_update().first()
 
         if run is None:
-            raise RuntimeError('no new parameter sets')
+            raise NoNewRun('no new parameter sets')
 
         run.state = LookupState.ACTIVE
 
