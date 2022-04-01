@@ -76,6 +76,16 @@ class TestObjectiveFunctionMisfit(TOF):
         with pytest.raises(NoNewRun):
             objectiveAvA.get_new()
 
+    def test_get_new_with_id(self, objectiveAvA, valuesA):
+        rid, p = objectiveAvA.get_new(with_id=True)
+        assert rid == 1
+        assert p == valuesA
+        # the state should be new now
+        assert objectiveAvA.state(valuesA) == LookupState.ACTIVE
+        # should fail now because if already consumed it
+        with pytest.raises(NoNewRun):
+            objectiveAvA.get_new()
+
     def test_set_result_force(self, objectiveAvA, valuesA, resultA):
         objectiveAvA.set_result(valuesA, resultA, force=True)
         # state should be completed

@@ -388,10 +388,11 @@ class ObjectiveFunction(metaclass=ABCMeta):
 
         return run
 
-    def get_new(self, scenario=None):
+    def get_new(self, scenario=None, with_id=False):
         """get a set of parameters that are not yet processed
 
         :param scenario: the name of the scenario
+        :param with_id: when set to True also return run ID
 
         The parameter set changes set from new to active
 
@@ -413,7 +414,10 @@ class ObjectiveFunction(metaclass=ABCMeta):
 
         self.session.commit()
 
-        return run.parameters
+        if with_id:
+            return run.id, run.parameters
+        else:
+            return run.parameters
 
     @abstractmethod
     def get_result(self, params, scenario=None):
