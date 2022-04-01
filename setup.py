@@ -15,6 +15,7 @@ setup(
         'configobj',
         'numpy>=1.21.0',
         'pandas',
+        'sqlalchemy',
         'dfo-ls',
     ],
     cmdclass={'build_sphinx': BuildDoc},
