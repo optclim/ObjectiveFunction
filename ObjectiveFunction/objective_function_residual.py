@@ -84,7 +84,8 @@ class ObjectiveFunctionResidual(ObjectiveFunction):
         """
 
         run = self._getRun(params, scenario=scenario)
-        if run.state == LookupState.ACTIVE or force:
+        if (run.state.value > LookupState.CONFIGURED.value
+            and run.state != LookupState.COMPLETED) or force:  # noqa W503
             # store residuals in file
             fname = self.basedir / f'residuals_{run.id}.npy'
             with open(fname, 'wb') as f:

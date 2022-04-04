@@ -142,7 +142,8 @@ class ObjectiveFunctionSimObs(ObjectiveFunction):
         result = self._check_simobs(result)
 
         run = self._getRun(params, scenario=scenario)
-        if run.state == LookupState.ACTIVE or force:
+        if (run.state.value > LookupState.CONFIGURED.value
+            and run.state != LookupState.COMPLETED) or force:  # noqa W503
             # store residuals in file
             fname = self.basedir / f'simobs_{run.id}.json'
             result.to_json(fname)

@@ -42,6 +42,8 @@ class TestObjectiveFunctionMisfit(TOF):
             objectiveA.state(valuesA)
         with pytest.raises(LookupError):
             objectiveA.set_result(valuesA, resultA)
+        with pytest.raises(LookupError):
+            objectiveA.get_with_state(LookupState.NEW)
         with pytest.raises(NoNewRun):
             objectiveA.get_new()
 
@@ -67,6 +69,16 @@ class TestObjectiveFunctionMisfit(TOF):
         with pytest.raises(RuntimeError):
             objectiveA.set_result(valuesA, resultA)
 
+    def test_get_with_state(self, objectiveAvA, valuesA):
+        p = objectiveAvA.get_with_state(LookupState.NEW,
+                                        new_state=LookupState.CONFIGURING)
+        assert p == valuesA
+        # the state should be configuring now
+        assert objectiveAvA.state(valuesA) == LookupState.CONFIGURING
+        # should fail now because if already consumed it
+        with pytest.raises(LookupError):
+            objectiveAvA.get_with_state(LookupState.NEW)
+
     def test_get_new(self, objectiveAvA, valuesA):
         p = objectiveAvA.get_new()
         assert p == valuesA
@@ -75,6 +87,17 @@ class TestObjectiveFunctionMisfit(TOF):
         # should fail now because if already consumed it
         with pytest.raises(NoNewRun):
             objectiveAvA.get_new()
+
+    def test_get_with_state_with_id(self, objectiveAvA, valuesA):
+        rid, p = objectiveAvA.get_with_state(LookupState.NEW, with_id=True,
+                                             new_state=LookupState.CONFIGURING)
+        assert rid == 1
+        assert p == valuesA
+        # the state should be configuring now
+        assert objectiveAvA.state(valuesA) == LookupState.CONFIGURING
+        # should fail now because if already consumed it
+        with pytest.raises(LookupError):
+            objectiveAvA.get_with_state(LookupState.NEW)
 
     def test_get_new_with_id(self, objectiveAvA, valuesA):
         rid, p = objectiveAvA.get_new(with_id=True)

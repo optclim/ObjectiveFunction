@@ -388,6 +388,41 @@ class ObjectiveFunction(metaclass=ABCMeta):
 
         return run
 
+    def get_with_state(self, state, scenario=None, with_id=False,
+                       new_state=None):
+        """get a set of parameters in a particular state
+
+        :param state: find run in state
+        :param scenario: the name of the scenario
+        :param with_id: when set to True also return run ID
+        :param new_state: when not None set the state of the run to new_state
+
+        Get a set of parameters for a run in a particular state. Optionally
+        the run transitions to new_state.
+
+        :return: dictionary of parameter values for which to compute the model
+        :raises LookupError: if there is no parameter set in specified state
+        """
+
+        s = self.getScenario(scenario)
+
+        run = self.session.query(DBRun)\
+                          .filter_by(scenario=s,
+                                     state=state)\
+                          .with_for_update().first()
+
+        if run is None:
+            raise LookupError(f'no parameter set in state {state.name}')
+
+        if new_state is not None:
+            run.state = new_state
+            self.session.commit()
+
+        if with_id:
+            return run.id, run.parameters
+        else:
+            return run.parameters
+
     def get_new(self, scenario=None, with_id=False):
         """get a set of parameters that are not yet processed
 
@@ -400,24 +435,14 @@ class ObjectiveFunction(metaclass=ABCMeta):
         :raises NoNewRun: if there is no new parameter set
         """
 
-        s = self.getScenario(scenario)
-
-        run = self.session.query(DBRun)\
-                          .filter_by(scenario=s,
-                                     state=LookupState.NEW)\
-                          .with_for_update().first()
-
-        if run is None:
+        try:
+            res = self.get_with_state(LookupState.NEW, scenario=scenario,
+                                      with_id=with_id,
+                                      new_state=LookupState.ACTIVE)
+        except LookupError:
             raise NoNewRun('no new parameter sets')
 
-        run.state = LookupState.ACTIVE
-
-        self.session.commit()
-
-        if with_id:
-            return run.id, run.parameters
-        else:
-            return run.parameters
+        return res
 
     @abstractmethod
     def get_result(self, params, scenario=None):

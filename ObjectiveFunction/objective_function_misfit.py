@@ -58,7 +58,8 @@ class ObjectiveFunctionMisfit(ObjectiveFunction):
         """
 
         run = self._getRun(params, scenario=scenario)
-        if run.state == LookupState.ACTIVE or force:
+        if (run.state.value > LookupState.CONFIGURED.value
+            and run.state != LookupState.COMPLETED) or force:  # noqa W503
             run.state = LookupState.COMPLETED
             run.misfit = result
             self.session.commit()
