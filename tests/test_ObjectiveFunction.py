@@ -187,6 +187,11 @@ def test_objfun_get_default_scenario(objfunmem_scenario):
     assert name in objfunmem_scenario.scenarios
 
 
+def test_setState_none(objfunmem_scenario):
+    with pytest.raises(LookupError):
+        objfunmem_scenario.setState(1, LookupState.ACTIVE)
+
+
 def test_get_with_state_none(objfunmem_scenario):
     with pytest.raises(LookupError):
         objfunmem_scenario.get_with_state(LookupState.NEW)

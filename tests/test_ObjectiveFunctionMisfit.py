@@ -69,6 +69,14 @@ class TestObjectiveFunctionMisfit(TOF):
         with pytest.raises(RuntimeError):
             objectiveA.set_result(valuesA, resultA)
 
+    def test_setState(self, objectiveAvA, valuesA):
+        rid, p = objectiveAvA.get_with_state(LookupState.NEW, with_id=True,
+                                             new_state=LookupState.CONFIGURING)
+        # the state should be configuring now
+        assert objectiveAvA.state(valuesA) == LookupState.CONFIGURING
+        objectiveAvA.setState(rid, LookupState.CONFIGURED)
+        assert objectiveAvA.state(valuesA) == LookupState.CONFIGURED
+
     def test_get_with_state(self, objectiveAvA, valuesA):
         p = objectiveAvA.get_with_state(LookupState.NEW,
                                         new_state=LookupState.CONFIGURING)
