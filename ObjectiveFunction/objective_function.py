@@ -327,6 +327,17 @@ class ObjectiveFunction(metaclass=ABCMeta):
         run = self._getRun(parameters, scenario=scenario)
         return run.id
 
+    def getState(self, runid):
+        """get the state of a run with ID
+
+        :param runid: ID of ru
+        :return: state of run
+        """
+        run = self.session.query(self._Run).filter_by(id=runid).one_or_none()
+        if run is None:
+            raise LookupError(f'no run with ID {runid}')
+        return run.state
+
     def setState(self, runid, state):
         """set the state of run
 
