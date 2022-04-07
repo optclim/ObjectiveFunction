@@ -13,7 +13,7 @@ nlopt.srand(1)
 
 
 class NLConfig(ObjFunConfig):
-    defaultCfgStr = ObjFunConfig.defaultCfgStr + """
+    optCfgStr = """
     [nlopt]
     algorithm = string()
     """
@@ -22,6 +22,10 @@ class NLConfig(ObjFunConfig):
         super().__init__(fname)
         self._log = logging.getLogger('ObjectiveFunction.optimisecfg')
         self._opt = None
+
+    @property
+    def defaultCfgStr(self):
+        return super().defaultCfgStr + '\n' + self.optCfgStr
 
     @property
     def optimiser(self):

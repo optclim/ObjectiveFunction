@@ -21,14 +21,16 @@ class ObjFunConfig:
     :type fname: Path
     """
 
-    defaultCfgStr = """
+    setupCfgStr = """
     [setup]
       study = string() # the name of the study
       scenario = string() # the name of the scenario
       basedir = string() # the base directory
       objfun = string(default=misfit)
       db = string(default=None) # SQLAlchemy DB connection string
+    """
 
+    parametersCfgStr = """
     [parameters]
       [[float_parameters]]
         [[[__many__]]]
@@ -45,8 +47,9 @@ class ObjFunConfig:
           max = integer() # the maximum value allowed
           constant = boolean(default=False) # if set to True the parameter is
                                             # not optimised for
+    """
 
-
+    targetsCfgStr = """
     [targets]
       __many__ = float
     """
@@ -58,6 +61,9 @@ class ObjFunConfig:
             msg = f'no such configuration file {fname}'
             self._log.error(msg)
             raise RuntimeError(msg)
+
+        self._basedir = None
+        self._path = fname.parent
 
         # read config file into string
         cfgData = fname.open('r').read()
@@ -98,6 +104,15 @@ class ObjFunConfig:
             for e in errors:
                 self._log.error(e)
             raise RuntimeError(msg)
+
+    def expand_path(self, path):
+        return (self._path / path).absolute()
+
+    @property
+    def defaultCfgStr(self):
+        return self.setupCfgStr + '\n' \
+            + self.parametersCfgStr + '\n' \
+            + self.targetsCfgStr
 
     def _get_params(self):
         self._params = {}
@@ -156,11 +171,13 @@ class ObjFunConfig:
     @property
     def basedir(self):
         """the base directory"""
-        p = Path(self.cfg['setup']['basedir'])
-        if not p.exists():
-            self._log.info(f'creating base directory {p}')
-            p.mkdir(parents=True)
-        return p
+        if self._basedir is None:
+            self._basedir = self.expand_path(
+                Path(self.cfg['setup']['basedir']))
+            if not self._basedir.exists():
+                self._log.info(f'creating base directory {self._basedir}')
+                self._basedir.mkdir(parents=True)
+        return self._basedir
 
     @property
     def study(self):
