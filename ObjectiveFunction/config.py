@@ -7,6 +7,7 @@ from pathlib import Path
 from os.path import expandvars
 from io import StringIO
 from functools import partial
+import pandas
 
 from .objective_function_misfit import ObjectiveFunctionMisfit
 from .objective_function_residual import ObjectiveFunctionResidual
@@ -228,7 +229,7 @@ class ObjFunConfig:
 
     @property
     def targets(self):
-        return self.cfg['targets']
+        return pandas.Series(self.cfg['targets'])
 
 
 if __name__ == '__main__':
