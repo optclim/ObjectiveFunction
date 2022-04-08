@@ -101,13 +101,16 @@ class ObjectiveFunctionSimObs(ObjectiveFunction):
         :param scenario: the name of the scenario
         :raises NewRun: when lookup fails
         :raises Waiting: when completed entries are required
-        :return: returns simulated observations if lookup succeeded or None
+        :return: returns simulated observations if lookup succeeded or
+                 a random pandas Series
         :rtype: pandas.Series
         """
 
         run = self._lookupRun(params, scenario=scenario)
         if run.state != LookupState.COMPLETED:
-            return None
+            result = pandas.Series(
+                numpy.random.rand(self.num_residuals),
+                index=self.observationNames)
         else:
             result = pandas.read_json(run.path, typ='series')
             self._check_simobs(result)
@@ -125,10 +128,7 @@ class ObjectiveFunctionSimObs(ObjectiveFunction):
         :rtype: numpy.arraynd
         """
         result = self.get_simobs(params, scenario=scenario)
-        if result is None:
-            return numpy.random.rand(self.num_residuals)
-        else:
-            return result.values
+        return result.values
 
     def set_result(self, params, result, scenario=None, force=False):
         """set the result for a paricular parameter set

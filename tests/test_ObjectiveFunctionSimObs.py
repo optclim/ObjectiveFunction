@@ -68,9 +68,10 @@ class TestObjectiveFunctionSimObs(TOFR):
 
     def test_lookup_parameters_two(self, objectiveA, valuesA, resultA):
         super().test_lookup_parameters_two(objectiveA, valuesA, resultA)
-        # should succeed but return None
-        r = objectiveA.get_simobs(valuesA)
-        assert r is None
+        # should succeed but return different values
+        r1 = objectiveA.get_simobs(valuesA)
+        r2 = objectiveA.get_simobs(valuesA)
+        assert numpy.all(r1 != r2)
 
     def test_set_result(self, objectiveAvA, valuesA, resultA):
         super().test_set_result(objectiveAvA, valuesA, resultA)
@@ -107,9 +108,10 @@ class TestObjectiveFunctionSimObsPrelim(TestObjectiveFunctionSimObs):
         assert isinstance(r, numpy.ndarray)
         if r.size == resultA.size:
             assert numpy.all(r != resultA)
-        # should succeed but return None
-        r = objectiveA.get_simobs(valuesA)
-        assert r is None
+        # should succeed but return different values
+        r1 = objectiveA.get_simobs(valuesA)
+        r2 = objectiveA.get_simobs(valuesA)
+        assert numpy.all(r1 != r2)
         # attempting to set result should fail because
         # parameter set is in wrong state ('n')
         with pytest.raises(RuntimeError):
