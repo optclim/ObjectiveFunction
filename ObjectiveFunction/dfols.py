@@ -53,6 +53,8 @@ def main():
             print('waiting')
             sys.exit(2)
 
+        break
+
     log.info(f"optimum at {x}")
     print('done')
 
